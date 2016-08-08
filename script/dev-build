@@ -1,0 +1,5 @@
+#!/bin/bash
+echo "use-figwheel"
+docker-compose run reactnative re-natal use-figwheel
+echo "assemble debug"
+docker-compose run reactnative /bin/bash -c 'cd android && ./gradlew assembleDebug'

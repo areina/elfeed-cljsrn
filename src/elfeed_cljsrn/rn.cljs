@@ -1,0 +1,21 @@
+(ns elfeed-cljsrn.rn
+  (:require [reagent.core :as r]))
+
+(def ReactNative (js/require "react-native"))
+(def app-registry (.-AppRegistry ReactNative))
+
+(def navigator (r/adapt-react-class (.-Navigator ReactNative)))
+(def navigation-bar (r/adapt-react-class (.-NavigationBar (.-Navigator ReactNative))))
+(def text (r/adapt-react-class (.-Text ReactNative)))
+(def text-input (r/adapt-react-class (.-TextInput ReactNative)))
+(def view (r/adapt-react-class (.-View ReactNative)))
+(def web-view (r/adapt-react-class (.-WebView ReactNative)))
+(def image (r/adapt-react-class (.-Image ReactNative)))
+(def list-view (r/adapt-react-class (.-ListView ReactNative)))
+(def touchable-highlight (r/adapt-react-class (.-TouchableHighlight ReactNative)))
+(def touchable-without-feedback (r/adapt-react-class (.-TouchableWithoutFeedback ReactNative)))
+(def touchable (r/adapt-react-class (.-TouchableNativeFeedback ReactNative)))
+(def drawer-layout (r/adapt-react-class (.-DrawerLayoutAndroid ReactNative)))
+(def activity-indicator (r/adapt-react-class (.-ActivityIndicator ReactNative)))
+(def refresh-control (r/adapt-react-class (.-RefreshControl ReactNative)))
+(def ui-manager (.-UIManager ReactNative))

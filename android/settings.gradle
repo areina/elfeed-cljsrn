@@ -1,0 +1,3 @@
+rootProject.name = 'ElfeedCljsrn'
+
+include ':app'
