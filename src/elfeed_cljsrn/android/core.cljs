@@ -30,9 +30,6 @@
 (defn unlisten-back-button! []
   (.removeEventListener (.-BackAndroid rn/ReactNative) "hardwareBackPress" go-back!))
 
-(defn rn-datasource []
-  (rn/ReactNative.ListView.DataSource. (clj->js {:rowHasChanged (fn [r1 r2] (not (= r1 r2)))})))
-
 (defn format-entry-date [date]
   (let [js-date (js/Date. date)]
     (.format (goog.i18n.DateTimeFormat. "dd/MM/yyyy") js-date)))
@@ -105,7 +102,7 @@
 
 (defn entry-row [entry]
   (let [styles {:list-wrapper {:flex-direction "row"
-                               :background-color (when-not (:unread? entry) "#F5F5F5")
+                               :background-color (if (:unread? entry) "#FFFFFF" "#F5F5F5")
                                :padding-left 16
                                :padding-right 16
                                :height 72
@@ -152,6 +149,19 @@
      [rn/text {:style (:value styles)}
       (str "Last update at: ") (format-update-time update-time)]]))
 
+(defn entry-quick-actions [entry]
+  (let [styles {:wrapper {:flex 1
+                          :flex-direction "row"
+                          :justify-content "flex-end"
+                          :align-items "center"
+                          :padding-right 14
+                          :background-color "#4db6ac"}
+                :icon {:color "white"}}]
+    [rn/view {:style (:wrapper styles)}
+     [rn/touchable {:on-press #(dispatch [:mark-entry-as-read entry])}
+      [rn/view {}
+       [icon {:style (:icon styles) :name "archive" :size 22}]]]]))
+
 (defn entries-panel [navigator]
   (let [loading (subscribe [:loading?])
         update-time (subscribe [:update-time])
@@ -168,7 +178,10 @@
                 :separator {:height 1
                             :background-color "#E0E0E0"}}]
     (fn [navigator]
-      (let [datasource (.cloneWithRows (rn-datasource) (clj->js (or @entries '())))
+      (let [datasource (.cloneWithRowsAndSections
+                        (rn/ReactNative.SwipeableListView.getNewDataSource.)
+                        (clj->js {:s1 (or @entries '())})
+                        (clj->js '("s1")))
             hack @recent-reads]
         [rn/view {:style (:wrapper styles)}
          (if @loading
@@ -178,24 +191,28 @@
            [rn/view {:style {:flex 1}}
             (when @remote-error
               [remote-error-message])
-            [rn/list-view {:dataSource datasource
-                           :refresh-control (r/as-element [rn/refresh-control {:refreshing false
-                                                                               :on-refresh (fn []
-                                                                                             (dispatch [:fetch-update-time])
-                                                                                             (dispatch [:fetch-entries]))}])
-                           :style (:list styles)
-                           :enableEmptySections true
-                           :render-section-header (fn [_ _]
-                                                    (when (> @update-time 0)
-                                                      (r/as-element [update-time-info @update-time])))
-                           :render-row (fn [data]
-                                         (let [entry-data (js->clj data :keywordize-keys true)
-                                               unread? (and (boolean (some #{"unread"} (:tags entry-data)))
-                                                            (not (boolean (some #{(:webid entry-data)} @recent-reads))))]
-                                           (r/as-element [entry-row (merge  entry-data {:unread? unread?})])))
-                           :render-separator (fn [section-id row-id _]
-                                               (r/as-element [rn/view {:key (str section-id "-" row-id)
-                                                                       :style (:separator styles)}]))}]])]))))
+            [rn/swipeable-list-view {:dataSource datasource
+                                     :max-swipe-distance 50
+                                     :bounceFirstRowOnMount false
+                                     :refresh-control (r/as-element [rn/refresh-control {:refreshing false
+                                                                                         :on-refresh (fn []
+                                                                                                       (dispatch [:fetch-update-time])
+                                                                                                       (dispatch [:fetch-entries]))}])
+                                     :style (:list styles)
+                                     :enableEmptySections true
+                                     :render-section-header (fn [_ _]
+                                                              (when (> @update-time 0)
+                                                                (r/as-element [update-time-info @update-time])))
+                                     :render-quick-actions (fn [row-data section-id row-id]
+                                                             (r/as-element [entry-quick-actions (js->clj row-data :keywordize-keys true)]))
+                                     :render-row (fn [data section-id row-id]
+                                                   (let [entry-data (js->clj data :keywordize-keys true)
+                                                         unread? (and (boolean (some #{"unread"} (:tags entry-data)))
+                                                                      (not (boolean (some #{(:webid entry-data)} @recent-reads))))]
+                                                     (r/as-element [entry-row (merge  entry-data {:unread? unread?})])))
+                                     :render-separator (fn [section-id row-id _]
+                                                         (r/as-element [rn/view {:key (str section-id "-" row-id)
+                                                                                 :style (:separator styles)}]))}]])]))))
 
 (defmulti panels identity)
 (defmethod panels :entries-panel [_ navigator] [entries-panel])
@@ -331,11 +348,11 @@
                                                                    ])
                            :ref (fn [ref-drawer]
                                   (dispatch [:set-android-drawer ref-drawer]))}
-         [rn/navigator {:initial-route   {:name :entries-panel :index 1}
+         [rn/navigator {:initial-route {:name :entries-panel :index 1}
                         :configure-scene (fn [route _]
                                            (if (= "settings-panel" (:name (js->clj route :keywordize-keys true)))
                                              (.. rn/ReactNative -Navigator -SceneConfigs -FloatFromBottomAndroid)
-                                             (.. rn/ReactNative -Navigator -SceneConfigs -HorizontalSwipeJump)))
+                                             (.. rn/ReactNative -Navigator -SceneConfigs -PushFromRight)))
                         :scene-style {:background-color "#FFFFFF"}
                         :navigation-bar (r/as-element
                                          [rn/navigation-bar {:style (:container (:navigation-bar styles))

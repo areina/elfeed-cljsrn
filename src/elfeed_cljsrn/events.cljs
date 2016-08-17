@@ -1,11 +1,11 @@
 (ns elfeed-cljsrn.events
-  (:require
-   [re-frame.core :refer [reg-event after dispatch]]
-   [cljs.spec :as s]
-   [ajax.core :refer [GET POST]]
-   [elfeed-cljsrn.local-storage :as ls]
-   [elfeed-cljsrn.rn :as rn]
-   [elfeed-cljsrn.db :as db :refer [app-db db->ls! ls-db-key]]))
+  (:require [cljs.reader :as reader]
+            [re-frame.core :refer [reg-event after dispatch]]
+            [cljs.spec :as s]
+            [ajax.core :refer [GET POST]]
+            [elfeed-cljsrn.local-storage :as ls]
+            [elfeed-cljsrn.rn :as rn]
+            [elfeed-cljsrn.db :as db :refer [app-db db->ls! ls-db-key]]))
 
 ;; -- Middleware ------------------------------------------------------------
 ;;
@@ -74,8 +74,9 @@
  (fn [db [_ response]]
    (-> db
        (assoc :fetching-entries? false)
-       ;; (assoc :entries-m (into {} (map (fn [entry] {(:webid entry) entry}) response)))
-       (assoc :entries response))))
+       ;; TODO check if we can do this in a different way. SwipeableListView
+       ;; needs a collection of elements with id attribute
+       (assoc :entries (map (fn [x] (merge {:id (:webid x)} x)) response)))))
 
 (reg-event
  :process-remote-entries-error

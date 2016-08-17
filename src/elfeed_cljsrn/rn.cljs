@@ -12,6 +12,7 @@
 (def web-view (r/adapt-react-class (.-WebView ReactNative)))
 (def image (r/adapt-react-class (.-Image ReactNative)))
 (def list-view (r/adapt-react-class (.-ListView ReactNative)))
+(def swipeable-list-view (r/adapt-react-class (.-SwipeableListView ReactNative)))
 (def touchable-highlight (r/adapt-react-class (.-TouchableHighlight ReactNative)))
 (def touchable-without-feedback (r/adapt-react-class (.-TouchableWithoutFeedback ReactNative)))
 (def touchable (r/adapt-react-class (.-TouchableNativeFeedback ReactNative)))
