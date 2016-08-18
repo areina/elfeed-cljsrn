@@ -9,6 +9,8 @@
 (def MaterialIcons (js/require "react-native-vector-icons/MaterialIcons"))
 (def icon (r/adapt-react-class MaterialIcons))
 
+(def codePush (js/require "react-native-code-push"))
+
 (def current-navigator (atom nil))
 
 (defn update-current-navigator! [nav]
@@ -316,7 +318,9 @@
                                              :flex-direction "row"
                                              :align-items "center"}}}]
     (r/create-class
-     {:component-did-mount #(listen-back-button!)
+     {:component-did-mount (fn []
+                             (listen-back-button!)
+                             (.sync codePush))
       :component-will-unmount #(unlisten-back-button!)
       :display-name "AppRoot"
       :reagent-render
