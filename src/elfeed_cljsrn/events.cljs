@@ -1,11 +1,18 @@
 (ns elfeed-cljsrn.events
   (:require [cljs.reader :as reader]
-            [re-frame.core :refer [reg-event after dispatch]]
+            [re-frame.core :refer [reg-event-db after dispatch]]
             [cljs.spec :as s]
             [ajax.core :refer [GET POST]]
             [elfeed-cljsrn.local-storage :as ls]
             [elfeed-cljsrn.rn :as rn]
             [elfeed-cljsrn.db :as db :refer [app-db db->ls! ls-db-key]]))
+
+(defn dec-to-zero
+  "Same as dec if not zero"
+  [arg]
+  (if (< 0 arg)
+    (dec arg)
+    arg))
 
 ;; -- Middleware ------------------------------------------------------------
 ;;
@@ -27,7 +34,7 @@
 
 ;; -- Handlers --------------------------------------------------------------
 
-(reg-event
+(reg-event-db
  :initialize-db
  validate-spec-mw
  (fn [_ _]
@@ -38,21 +45,21 @@
                               (dispatch [:fetch-update-time]))))
    (assoc app-db :loading-ls? true)))
 
-(reg-event
+(reg-event-db
  :ls->db
  (fn [db [_ ls-db]]
    (-> db
        (merge ls-db)
        (assoc :loading-ls? false))))
 
-(reg-event
+(reg-event-db
  :process-api-error
  (fn [db [_ error]]
    (-> db
        (assoc :loading-remotely? false)
        (assoc :remote-error error))))
 
-(reg-event
+(reg-event-db
  :fetch-entries
  (fn [db _]
    (let [url (str (:server db) "/elfeed/search?q=" "@15-days-old %2bunread")]
@@ -68,7 +75,7 @@
        (assoc :error-entries false)
        (assoc :fetching-entries? true))))
 
-(reg-event
+(reg-event-db
  :process-remote-entries
  ->ls
  (fn [db [_ response]]
@@ -78,14 +85,14 @@
        ;; needs a collection of elements with id attribute
        (assoc :entries (map (fn [x] (merge {:id (:webid x)} x)) response)))))
 
-(reg-event
+(reg-event-db
  :process-remote-entries-error
  (fn [db [_ error]]
    (-> db
        (assoc :fetching-entries? false)
        (assoc :error-entries error))))
 
-(reg-event
+(reg-event-db
  :mark-entry-as-read
  (fn [db [_ entry]]
    (let [url (str (:server db) "/elfeed/mark-read" "?webid=" (js/encodeURIComponent (:webid entry)))]
@@ -103,7 +110,7 @@
                                  (conj coll (:webid entry))
                                  #{(:webid entry)}))))))
 
-(reg-event
+(reg-event-db
  :fetch-entry-content
  (fn [db [_ entry]]
    (let [url (str (:server db) "/elfeed/content/" (:content entry))]
@@ -119,7 +126,7 @@
        (assoc-in [:entries-m (:webid entry)] entry)
        (assoc :fetching-entry? true))))
 
-(reg-event
+(reg-event-db
  :process-remote-entry
  ->ls
  (fn [db [_ entry response]]
@@ -127,14 +134,14 @@
        (assoc :fetching-entry? false)
        (assoc-in [:entries-m (:webid entry) :content-body] response))))
 
-(reg-event
+(reg-event-db
  :process-remote-entry-error
  (fn [db [_ error]]
    (-> db
        (assoc :fetching-entry? false)
        (assoc :error-entry error))))
 
-(reg-event
+(reg-event-db
  :fetch-update-time
  (fn [db [_ _]]
    (let [url (str (:server db) "/elfeed/update")]
@@ -147,7 +154,7 @@
                            (dispatch [:process-remote-update-time-error error]))}))
    (assoc db :fetching-update-time true)))
 
-(reg-event
+(reg-event-db
  :process-remote-update-time
  ->ls
  (fn [db [_ response]]
@@ -155,32 +162,60 @@
        (assoc :fetching-update-time false)
        (assoc :update-time response))))
 
-(reg-event
+(reg-event-db
  :process-remote-update-time-error
  (fn [db [_ error]]
    (-> db
        (assoc :fetching-update-time? false)
        (assoc :error-update-time error))))
 
-(reg-event
+(reg-event-db
  :update-server-value
  ->ls
  (fn [db [_ value]]
    (assoc db :server value)))
 
-(reg-event
+(reg-event-db
  :open-entry-in-browser
  (fn [db [_ _]]
    (let [url (:link (get (:entries-m db) (:current-entry db)))]
      (.openURL (.-Linking rn/ReactNative) url))
    db))
 
-(reg-event
+(reg-event-db
  :set-active-panel
  (fn [db [_ active-panel]]
    (assoc db :active-panel active-panel)))
 
-(reg-event
- :set-android-drawer
- (fn [db [_ drawer]]
-   (assoc db :android-drawer drawer)))
+(reg-event-db
+ :drawer/set
+ (fn [db [_ ref]]
+   (assoc-in db [:drawer :ref] ref)))
+
+(reg-event-db
+ :drawer/open
+ (fn [db [_ _]]
+   (.openDrawer (:ref (:drawer db)))
+   (assoc-in db [:drawer :open?] true)))
+
+(reg-event-db
+ :drawer/close
+ (fn [db [_ _]]
+   (.closeDrawer (:ref (:drawer db)))
+   (assoc-in db [:drawer :open?] false)))
+
+(reg-event-db
+ :nav/push
+ (fn [db [_ value]]
+   (println value)
+   (-> db
+       (update-in [:nav :index] inc)
+       (update-in [:nav :routes] #(conj % value)))))
+
+(reg-event-db
+ :nav/pop
+ validate-spec-mw
+ (fn [db [_ _]]
+   (-> db
+       (update-in [:nav :index] dec-to-zero)
+       (update-in [:nav :routes] pop))))

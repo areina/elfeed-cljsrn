@@ -35,9 +35,9 @@
    (:server db)))
 
 (reg-sub
- :android-drawer
+ :drawer
  (fn [db]
-   (:android-drawer db)))
+   (:drawer db)))
 
 (reg-sub
  :remote-error
@@ -48,3 +48,8 @@
  :update-time
  (fn [db]
    (:update-time db)))
+
+(reg-sub
+ :nav/state
+ (fn [db]
+   (:nav db)))
