@@ -38,6 +38,6 @@ I use Emacs for development and Genymotion as an Android emulator.
 - App: Update code to new re-frame v0.8
 - App: Split code in scenes and components
 - App: Testing
-- RN: Change navigation to new navigation experimental
-- RN: Use SwipeableListView to mark an entry as read from the list
+- ~~RN: Change navigation to new navigation experimental~~
+- ~~RN: Use SwipeableListView to mark an entry as read from the list~~
 - iOS version
