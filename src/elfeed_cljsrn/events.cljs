@@ -207,7 +207,6 @@
 (reg-event-db
  :nav/push
  (fn [db [_ value]]
-   (println value)
    (-> db
        (update-in [:nav :index] inc)
        (update-in [:nav :routes] #(conj % value)))))
