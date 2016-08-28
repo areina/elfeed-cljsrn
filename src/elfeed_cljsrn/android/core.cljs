@@ -11,6 +11,19 @@
 
 (def codePush (js/require "react-native-code-push"))
 
+(defn go-back! [navigation-state]
+  (if (zero? (:index navigation-state))
+    false
+    (do
+      (dispatch [:nav/pop nil])
+      true)))
+
+(defn listen-back-button! [navigation-state]
+  (.addEventListener (.-BackAndroid rn/ReactNative) "hardwareBackPress" #(go-back! @navigation-state)))
+
+(defn unlisten-back-button! [navigation-state]
+  (.removeEventListener (.-BackAndroid rn/ReactNative) "hardwareBackPress" #(go-back! @navigation-state)))
+
 (defn format-entry-date [date]
   (let [js-date (js/Date. date)]
     (.format (goog.i18n.DateTimeFormat. "dd/MM/yyyy") js-date)))
@@ -292,7 +305,10 @@
 (defn app-root []
   (let [nav (subscribe [:nav/state])]
     (r/create-class
-     {:component-did-mount #(.sync codePush)
+     {:component-did-mount (fn []
+                             (listen-back-button! nav)
+                             (.sync codePush))
+      :component-will-unmount #(unlisten-back-button! nav)
       :display-name "AppRoot"
       :reagent-render
       (fn []
