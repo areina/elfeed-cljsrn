@@ -1,8 +1,9 @@
 (ns elfeed-cljsrn.events
-  (:require [cljs.reader :as reader]
-            [re-frame.core :refer [reg-event-db after dispatch]]
+  (:require [ajax.core :as ajax]
+            [cljs.reader :as reader]
+            [day8.re-frame.http-fx]
+            [re-frame.core :refer [reg-event-db after dispatch reg-event-fx]]
             [cljs.spec :as s]
-            [ajax.core :refer [GET POST]]
             [elfeed-cljsrn.local-storage :as ls]
             [elfeed-cljsrn.rn :as rn]
             [elfeed-cljsrn.db :as db :refer [app-db db->ls! ls-db-key]]))
@@ -59,21 +60,19 @@
        (assoc :loading-remotely? false)
        (assoc :remote-error error))))
 
-(reg-event-db
+(reg-event-fx
  :fetch-entries
- (fn [db _]
-   (let [url (str (:server db) "/elfeed/search?q=" "@15-days-old %2bunread")]
-     (POST
-         url
-         {:handler (fn [data]
-                     (dispatch [:process-remote-entries data]))
-          :error-handler (fn [error]
-                           (dispatch [:process-remote-entries-error error]))
-          :response-format :json
-          :keywords? true}))
-   (-> db
-       (assoc :error-entries false)
-       (assoc :fetching-entries? true))))
+ (fn [{db :db} _]
+   {:http-xhrio {:method :post
+                 :uri (str (:server db) "/elfeed/search?q=" "@15-days-old %2bunread")
+                 :format :text
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :keywords? true
+                 :on-success [:process-remote-entries]
+                 :on-failure [:process-remote-entries-error]}
+    :db (assoc db
+               :error-entries false
+               :fetching-entries? true)}))
 
 (reg-event-db
  :process-remote-entries
@@ -92,44 +91,50 @@
        (assoc :fetching-entries? false)
        (assoc :error-entries error))))
 
-(reg-event-db
+(reg-event-fx
  :mark-entry-as-read
- (fn [db [_ entry]]
-   (let [url (str (:server db) "/elfeed/mark-read" "?webid=" (js/encodeURIComponent (:webid entry)))]
-     (POST
-         url
-         {:handler (fn [data]
-                     )
-          :format :json
-          :error-handler (fn [error]
-                           
-                           )}))
-   (-> db
-       (update :recent-reads (fn [coll]
-                               (if coll
-                                 (conj coll (:webid entry))
-                                 #{(:webid entry)}))))))
+ (fn [{db :db} [_ entry]]
+   {:http-xhrio {:method :post
+                 :uri (str (:server db) "/elfeed/mark-read" "?webid=" (js/encodeURIComponent (:webid entry)))
+                 :format :json
+                 :response-format (ajax/json-response-format)
+                 :on-success [:process-mark-entry-as-read]
+                 :on-failure [:process-mark-entry-as-read-error]}
+    :db (update db :recent-reads (fn [coll]
+                                   (if coll
+                                     (conj coll (:webid entry))
+                                     #{(:webid entry)})))}))
 
 (reg-event-db
+ :process-mark-entry-as-read
+ (fn [db [_ response]]
+   db))
+
+(reg-event-db
+ :process-mark-entry-as-read-error
+ (fn [db [_ error]]
+   db))
+
+(reg-event-fx
  :fetch-entry-content
- (fn [db [_ entry]]
-   (let [url (str (:server db) "/elfeed/content/" (:content entry))]
-     (POST url
-         {:handler (fn [data]
-                     (dispatch [:process-remote-entry entry data])
-                     (dispatch [:mark-entry-as-read entry]))
-          :error-handler (fn [error]
-                           (dispatch [:process-remote-entry-error error]))}))
-   (-> db
-       (assoc :error-entry false)
-       (assoc :current-entry (:webid entry))
-       (assoc-in [:entries-m (:webid entry)] entry)
-       (assoc :fetching-entry? true))))
+ (fn [{db :db} [_ entry]]
+   {:http-xhrio {:method :post
+                 :uri (str (:server db) "/elfeed/content/" (:content entry))
+                 :format :json
+                 :response-format (ajax/text-response-format)
+                 :on-success [:process-remote-entry entry]
+                 :on-failure [:process-remote-entry-error]}
+    :db (-> db
+            (assoc :error-entry false
+                   :current-entry (:webid entry)
+                   :fetching-entry? true)
+            (assoc-in [:entries-m (:webid entry)] entry))}))
 
 (reg-event-db
  :process-remote-entry
  ->ls
  (fn [db [_ entry response]]
+   (dispatch [:mark-entry-as-read entry])
    (-> db
        (assoc :fetching-entry? false)
        (assoc-in [:entries-m (:webid entry) :content-body] response))))
@@ -141,18 +146,17 @@
        (assoc :fetching-entry? false)
        (assoc :error-entry error))))
 
-(reg-event-db
+(reg-event-fx
  :fetch-update-time
- (fn [db [_ _]]
-   (let [url (str (:server db) "/elfeed/update")]
-     (POST
-         url
-         {:params {:time (:update-time db)}
-          :handler (fn [data]
-                     (dispatch [:process-remote-update-time data]))
-          :error-handler (fn [error]
-                           (dispatch [:process-remote-update-time-error error]))}))
-   (assoc db :fetching-update-time true)))
+ (fn [{db :db} _]
+   {:http-xhrio {:method :post
+                 :uri (str (:server db) "/elfeed/update")
+                 :params {:time (:update-time db)}
+                 :format :json
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success [:process-remote-update-time]
+                 :on-failure [:process-remote-update-time-error]}
+    :db (assoc db :fetching-update-time true)}))
 
 (reg-event-db
  :process-remote-update-time
