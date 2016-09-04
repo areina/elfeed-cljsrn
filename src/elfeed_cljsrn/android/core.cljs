@@ -324,5 +324,5 @@
                                     :render-scene #(r/as-element [scene %])}]])})))
 
 (defn init []
-  (dispatch-sync [:initialize-db])
+  (dispatch-sync [:boot])
   (.registerComponent rn/app-registry "ElfeedCljsrn" #(r/reactify-component app-root)))

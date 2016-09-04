@@ -1,13 +1,24 @@
-(ns elfeed-cljsrn.local-storage)
+(ns elfeed-cljsrn.local-storage
+  (:require [cljs.reader :as reader]))
 
-(def ReactNative (js/require "react-native"))
-(def storage (.-AsyncStorage ReactNative))
+(def storage (.-AsyncStorage (js/require "react-native")))
+(def storage-key "elfeed-cljs:db")
 
-(defn get-item [key cb]
-  (.getItem storage key cb))
+(defn load
+  ([on-success]
+   (load on-success nil))
+  ([on-success on-error]
+   (-> storage
+       (.getItem storage-key)
+       (.then (fn [data]
+                (on-success (cljs.reader/read-string (or data "")))))
+       (.catch on-error))))
 
-(defn set-item [key value cb]
-  (.setItem storage key value cb))
-
-(defn remove-item [key cb]
-  (.removeItem storage key cb))
+(defn save
+  ([data]
+   (save data nil nil))
+  ([data on-success on-error]
+   (-> storage
+       (.setItem key (pr-str data))
+       (.then on-success)
+       (.catch on-error))))
