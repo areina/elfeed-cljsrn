@@ -7,6 +7,7 @@
                  [org.clojure/clojurescript "1.9.225"]
                  [reagent "0.6.0-SNAPSHOT" :exclusions [cljsjs/react cljsjs/react-dom cljsjs/react-dom-server]]
                  [re-frame "0.8.0"]
+                 [day8.re-frame/async-flow-fx "0.0.6"]
                  [day8.re-frame/http-fx "0.0.4"]]
   :plugins [[lein-cljsbuild "1.1.4"]
             [lein-figwheel "0.5.0-6"]]
