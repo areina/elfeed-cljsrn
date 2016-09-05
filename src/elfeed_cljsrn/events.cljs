@@ -127,9 +127,10 @@
 (reg-event-fx
  :mark-entry-as-read
  (fn [{db :db} [_ entry]]
-   {:http-xhrio {:method :post
-                 :uri (str (:server db) "/elfeed/mark-read" "?webid=" (js/encodeURIComponent (:webid entry)))
-                 :format :json
+   {:http-xhrio {:method :put
+                 :uri (str (:server db) "/elfeed/tags")
+                 :params {:entries (list (:webid entry)) :remove (list "unread")}
+                 :format (ajax/json-request-format)
                  :response-format (ajax/json-response-format)
                  :on-success [:success-mark-entry-as-read]
                  :on-failure [:failure-mark-entry-as-read]}
