@@ -34,7 +34,7 @@ I use Emacs for development and Genymotion as an Android emulator.
 
 - Publish on Google Play
 - Elfeed: Authentication (auth basic or something more complex)
-- Elfeed: Mark entry as read
+- ~~Elfeed: Mark entry as read~~
 - ~~App: Update code to new re-frame v0.8~~
 - App: Split code in scenes and components
 - App: Testing
