@@ -37,7 +37,7 @@
                     :background-color "#fff9c4"}}
    [rn/text "Network error. Check your wifi or your elfeed server."]])
 
-(defn settings-panel []
+(defn settings-scene []
   (let [server (subscribe [:server])
         styles {:wrapper {:margin-top 10
                           :padding-left 16}}]
@@ -63,7 +63,7 @@
       [rn/view {}
        [icon {:style (:icon styles) :name "archive" :size 22}]]]]))
 
-(defn entry-panel [entry]
+(defn entry-scene [entry]
   (let [loading? (subscribe [:fetching-entry?])
         remote-error (subscribe [:remote-error :entry])
         entry-content (subscribe [:current-entry])
@@ -151,7 +151,7 @@
      [rn/text {:style (:value styles)}
       (str "Last update at: ") (format-update-time update-time)]]))
 
-(defn entries-panel []
+(defn entries-scene []
   (let [loading (subscribe [:loading?])
         update-time (subscribe [:update-time])
         remote-error (subscribe [:remote-error :entries])
@@ -264,9 +264,9 @@
 
 (defmulti scene #(keyword (aget % "scene" "route" "key")))
 
-(defmethod scene :entries [scene-props] [entries-panel])
-(defmethod scene :entry [scene-props] [entry-panel])
-(defmethod scene :settings [scene-props] [settings-panel])
+(defmethod scene :entries [scene-props] [entries-scene])
+(defmethod scene :entry [scene-props] [entry-scene])
+(defmethod scene :settings [scene-props] [settings-scene])
 
 (defn nav-title [scene-props]
   (let [title (aget scene-props "scene" "route" "title")]
