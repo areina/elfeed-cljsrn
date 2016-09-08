@@ -39,7 +39,7 @@
 
 (defn settings-panel []
   (let [server (subscribe [:server])
-        styles {:wrapper {:margin-top 72
+        styles {:wrapper {:margin-top 10
                           :padding-left 16}}]
     (fn []
       [rn/view {:style (:wrapper styles)}
@@ -68,8 +68,7 @@
         remote-error (subscribe [:remote-error :entry])
         entry-content (subscribe [:current-entry])
         styles {:wrapper {:flex 1
-                          :background-color "#FFFFFF"
-                          :margin-top 56}
+                          :background-color "#FFFFFF"}
                 :header {:margin-bottom 10
                          :padding-top 10
                          :padding-left 10
@@ -160,7 +159,6 @@
         recent-reads (subscribe [:recent-reads])
         styles {:wrapper {:flex 1
                           :flex-direction "row"
-                          :margin-top 56
                           :background-color "#FFFFFF"}
                 :loading-info {:margin 10}
                 :list {:margin-top 8
@@ -318,7 +316,7 @@
                            :ref (fn [ref-drawer]
                                   (dispatch [:drawer/set ref-drawer]))}
          [rn/navigation-card-stack {:on-navigate-back #(dispatch [:nav/pop nil])
-                                    :render-overlay #(r/as-element [header (js->clj % :keywordize-keys true)])
+                                    :render-header #(r/as-element [header (js->clj % :keywordize-keys true)])
                                     :navigation-state @nav
                                     :style {:flex 1}
                                     :render-scene #(r/as-element [scene %])}]])})))
