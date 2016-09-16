@@ -8,8 +8,7 @@
     "prod": "env/prod"
   },
   "modules": [
-    "react-native-vector-icons/MaterialIcons",
-    "react-native-code-push"
+    "react-native-vector-icons/MaterialIcons"
   ],
   "imageDirs": [
     "images"

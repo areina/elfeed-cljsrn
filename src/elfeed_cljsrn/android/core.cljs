@@ -21,8 +21,6 @@
 (def MaterialIcons (js/require "react-native-vector-icons/MaterialIcons"))
 (def icon (r/adapt-react-class MaterialIcons))
 
-(def codePush (js/require "react-native-code-push"))
-
 (defn go-back! [navigation-state]
   (if (zero? (:index navigation-state))
     false
@@ -409,9 +407,7 @@
 (defn app-root []
   (let [nav (subscribe [:nav/state])]
     (r/create-class
-     {:component-did-mount (fn []
-                             (listen-back-button! nav)
-                             (.sync codePush))
+     {:component-did-mount #(listen-back-button! nav)
       :component-will-unmount #(unlisten-back-button! nav)
       :display-name "AppRoot"
       :reagent-render
