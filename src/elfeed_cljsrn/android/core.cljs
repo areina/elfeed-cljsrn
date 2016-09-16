@@ -68,7 +68,7 @@
                           :justify-content "flex-end"
                           :align-items "center"
                           :padding-right 14}
-                :icon {:color "#00796b"}}]
+                :icon {:color (:dark-primary palette)}}]
     [rn/view {:style (:wrapper styles)}
      [rn/touchable {:on-press #(dispatch [:mark-entry-as-read entry])}
       [rn/view {}
@@ -84,7 +84,7 @@
                          :padding-top 10
                          :padding-left 10
                          :padding-bottom 10
-                         :border-bottom-color "#CCCCCC"
+                         :border-bottom-color (:divider palette)
                          :border-bottom-width 1}
                 :loading-content {:flex 1
                                   :padding-left 10
@@ -215,7 +215,7 @@
 
 (defn drawer-component []
   (let [styles {:section {}
-                :header {:background-color "#004d40"
+                :header {:background-color (:primary palette)
                          :height 120
                          :margin-bottom 8 }
                 :item {:flex 1
@@ -225,10 +225,10 @@
                        :padding-left 16}
                 :icon {:padding 1}
                 :value {:font-size 14
-                        :color "#000000"
+                        :color (:primary-text palette)
                         :margin-left 28}}]
     [rn/view {:style {:flex 1
-                      :background-color "#FFFFFF"}}
+                      :background-color (:white colors)}}
      [rn/view {:style (:header styles)}]
      [rn/view {:style {:margin-top 8}}
       [rn/touchable {:on-press (fn []
@@ -255,7 +255,7 @@
   (let [ref-icon (r/atom nil)
         styles {:button {:padding-vertical 16
                          :padding-horizontal 8}
-                :icon {:color "#e0f2f1"}}
+                :icon {:color (:text colors)}}
         actions [{:label "Open in browser"
                   :action (fn [] (dispatch [:open-entry-in-browser]))}]]
     (fn []
@@ -281,7 +281,7 @@
 
 (defn nav-title [scene-props]
   (let [title (aget scene-props "scene" "route" "title")]
-    [rn/navigation-header-title {:text-style {:color "#e0f2f1"}} title]))
+    [rn/navigation-header-title {:text-style {:color (:text palette)}} title]))
 
 (defn nav-left-button [scene-props]
   (let [index (aget scene-props "scene" "index")
@@ -289,7 +289,7 @@
                                    :flex-direction "row"
                                    :align-items "center"
                                    :justify-content "center"}
-                :button {:color "#e0f2f1"
+                :button {:color (:text palette)
                          :height 24
                          :width 24
                          :margin 16}}
