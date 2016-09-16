@@ -19,6 +19,6 @@
    (save data nil nil))
   ([data on-success on-error]
    (-> storage
-       (.setItem key (pr-str data))
+       (.setItem storage-key (pr-str data))
        (.then on-success)
        (.catch on-error))))
