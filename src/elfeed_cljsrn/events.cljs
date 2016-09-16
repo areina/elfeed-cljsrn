@@ -4,6 +4,7 @@
             [day8.re-frame.http-fx]
             [re-frame.core :refer [reg-event-db after debug dispatch reg-event-fx reg-fx]]
             [cljs.spec :as s]
+            [elfeed-cljsrn.navigation :refer [routes]]
             [elfeed-cljsrn.local-storage :as ls]
             [elfeed-cljsrn.rn :as rn]
             [elfeed-cljsrn.db :as db :refer [app-db]]))
@@ -130,15 +131,13 @@
  :success-save-server
  ->ls
  (fn [{db :db} _]
-   {:dispatch-n (list [:nav/push {:key :entries :title "All entries"}] [:fetch-content])
+   {:dispatch-n (list [:nav/push (:entries routes)] [:fetch-content])
     :db (update db :server merge {:valid? true :checking? false})}))
 
 (reg-event-fx
  :failure-save-server
  (fn [{db :db} [_ error]]
    {:db (assoc db :server {:url nil :valid? false :error-message (:status-text error) :checking? false})}))
-
-
 
 (reg-event-db
  :init-nav

@@ -2,6 +2,7 @@
   (:require [reagent.core :as r :refer [atom]]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [elfeed-cljsrn.rn :as rn]
+            [elfeed-cljsrn.navigation :refer [navigate-back navigate-to]]
             [elfeed-cljsrn.events]
             [elfeed-cljsrn.subs])
   (:import [goog.i18n DateTimeFormat]))
@@ -26,7 +27,7 @@
   (if (zero? (:index navigation-state))
     false
     (do
-      (dispatch [:nav/pop nil])
+      (navigate-back)
       true)))
 
 (defn listen-back-button! [navigation-state]
@@ -219,7 +220,7 @@
                    :underlay-color "#f5f5f5"
                    :on-press (fn [_]
                                (dispatch [:fetch-entry-content entry])
-                               (dispatch [:nav/push {:key :entry :title ""}]))}
+                               (navigate-to :entry))}
      [rn/view {:style (:list-wrapper styles)}
       [rn/view {:style {:flex 1
                         :justify-content "center"}}
@@ -337,7 +338,7 @@
         [rn/text {:style (:value styles)} "All entries" ]]]
       [rn/touchable {:on-press (fn []
                                  (dispatch [:drawer/close nil])
-                                 (dispatch [:nav/push {:key :settings :title "Settings"}]))}
+                                 (navigate-to :settings))}
        [rn/view {:style (:item styles)}
         [icon {:style (:icon styles) :name "settings" :size 20}]
         [rn/text {:style (:value styles)} "Settings" ]]]]]))
@@ -387,7 +388,7 @@
                          :margin 16}}
         root? (= scene-key "entries")
         icon-name (if root? "menu" "arrow-back")
-        on-press (if root? #(dispatch [:drawer/open nil]) #(dispatch [:nav/pop nil]))]
+        on-press (if root? #(dispatch [:drawer/open nil]) #(navigate-back))]
     [rn/touchable-opacity {:style (:button-container styles) :on-press on-press}
      [icon {:style (:button styles) :name icon-name :size 24}]]))
 
@@ -422,7 +423,7 @@
                                   (dispatch [:drawer/set ref-drawer]))}
          [rn/status-bar {:background-color (:dark-primary palette)}]
          (when @nav
-           [rn/navigation-card-stack {:on-navigate-back #(dispatch [:nav/pop nil])
+           [rn/navigation-card-stack {:on-navigate-back #(navigate-back)
                                       :render-header #(r/as-element [header (js->clj % :keywordize-keys true)])
                                       :navigation-state @nav
                                       :style {:flex 1}
