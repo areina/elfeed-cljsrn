@@ -350,7 +350,12 @@
         actions [{:label "Open in browser"
                   :action (fn [] (dispatch [:open-entry-in-browser]))}]]
     (fn []
-      [rn/view
+      [rn/view {:style {:flex 1
+                        :flex-direction "row"}}
+       ;; this empty view is a hack for showPopupmenu
+       ;; it adds the popup next to the tag, so we need an element before the
+       ;; icon.
+       [rn/view [rn/text {:ref (fn [ref] (reset! ref-icon ref))} ""]]
        [rn/touchable {:on-press (fn [e]
                                   (.showPopupMenu rn/ui-manager (.findNodeHandle rn/ReactNative @ref-icon)
                                                   (clj->js (map :label actions))
@@ -359,10 +364,7 @@
                                                     (when i
                                                       ((:action (nth actions i)))))))}
         [rn/view {:style (:button styles)}
-         [icon {:style (:icon styles)
-                :name "more-vert"
-                :size 24
-                :ref (fn [ref] (reset! ref-icon ref))}]]]])))
+         [icon {:style (:icon styles) :name "more-vert" :size 24}]]]])))
 
 (defmulti scene #(keyword (aget % "scene" "route" "key")))
 
