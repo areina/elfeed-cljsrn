@@ -14,9 +14,7 @@
 (reg-sub
  :loading?
  (fn [db]
-   (and (:loading-remotely? db)
-        (not (:loading-locally? db))
-        (empty? (:entries db)))))
+   (:fetching-entries? db)))
 
 (reg-sub
  :fetching-entry?

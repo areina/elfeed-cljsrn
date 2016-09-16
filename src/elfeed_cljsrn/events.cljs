@@ -32,7 +32,7 @@
     (after (partial check-and-throw ::db/app-db))
     []))
 
-(def ->ls (after (fn [db] (ls/save db))))
+(def ->ls (after (fn [db] (ls/save (select-keys db '(:entries :nav :server :update-time))))))
 
 ;; -- Effect Handlers ----------------------------------------------------------
 
@@ -62,7 +62,7 @@
   {:first-dispatch [:load-localstore]
    :rules [{:when :seen?
             :events :success-load-localstore
-            :dispatch-n (list [:fetch-entries] [:fetch-update-time])}
+            :dispatch-n (list [:init-nav] [:fetch-content])}
            {:when :seen-both?
             :events [:success-fetch-entries :success-fetch-update-time]
             :dispatch [:success-boot] :halt? true}]})
@@ -94,10 +94,74 @@
        (assoc :loading-ls? false))))
 
 (reg-event-fx
+ :update-server
+ (fn [{db :db} [_ url]]
+   {:http-xhrio {:method :post
+                 :uri (str url "/elfeed/update")
+                 :format :json
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success [:success-update-server]
+                 :on-failure [:failure-update-server]}
+    :db (assoc db :server {:url url :checking? true})}))
+
+(reg-event-fx
+ :success-update-server
+ ->ls
+ (fn [{db :db} _]
+   {:db (update db :server merge {:valid? true :checking? false})}))
+
+(reg-event-fx
+ :failure-update-server
+ (fn [{db :db} [_ error]]
+   {:db (assoc db :server {:url nil :valid? false :error-message (:status-text error) :checking? false})}))
+
+(reg-event-fx
+ :save-server
+ (fn [{db :db} [_ url ]]
+   {:http-xhrio {:method :post
+                 :uri (str url "/elfeed/update")
+                 :format :json
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success [:success-save-server]
+                 :on-failure [:failure-save-server]}
+    :db (assoc db :server {:url url :checking? true})}))
+
+(reg-event-fx
+ :success-save-server
+ ->ls
+ (fn [{db :db} _]
+   {:dispatch-n (list [:nav/push {:key :entries :title "All entries"}] [:fetch-content])
+    :db (update db :server merge {:valid? true :checking? false})}))
+
+(reg-event-fx
+ :failure-save-server
+ (fn [{db :db} [_ error]]
+   {:db (assoc db :server {:url nil :valid? false :error-message (:status-text error) :checking? false})}))
+
+
+
+(reg-event-db
+ :init-nav
+ ->ls
+ (fn [db _]
+   (let [route (if (:valid? (:server db))
+                 {:key :entries :title "All entries"}
+                 {:key :configure-server :title "Configure your Elfeed server"})]
+     (assoc db :nav {:index 0 :routes [route]}))))
+
+(reg-event-fx
+ :fetch-content
+ (fn [{db :db} _]
+   (if (:valid? (:server db))
+     {:dispatch-n (list [:fetch-entries] [:fetch-update-time])
+      :db db}
+     {:db db})))
+
+(reg-event-fx
  :fetch-entries
  (fn [{db :db} _]
    {:http-xhrio {:method :post
-                 :uri (str (:server db) "/elfeed/search?q=" "@15-days-old %2bunread")
+                 :uri (str (:url (:server db)) "/elfeed/search?q=" "@15-days-old %2bunread")
                  :format :text
                  :response-format (ajax/json-response-format {:keywords? true})
                  :keywords? true
@@ -128,7 +192,7 @@
  :mark-entry-as-read
  (fn [{db :db} [_ entry]]
    {:http-xhrio {:method :put
-                 :uri (str (:server db) "/elfeed/tags")
+                 :uri (str (:url (:server db)) "/elfeed/tags")
                  :params {:entries (list (:webid entry)) :remove (list "unread")}
                  :format (ajax/json-request-format)
                  :response-format (ajax/json-response-format)
@@ -153,7 +217,7 @@
  :fetch-entry-content
  (fn [{db :db} [_ entry]]
    {:http-xhrio {:method :post
-                 :uri (str (:server db) "/elfeed/content/" (:content entry))
+                 :uri (str (:url (:server db)) "/elfeed/content/" (:content entry))
                  :format :json
                  :response-format (ajax/text-response-format)
                  :on-success [:success-fetch-entry-content entry]
@@ -184,7 +248,7 @@
  :fetch-update-time
  (fn [{db :db} _]
    {:http-xhrio {:method :post
-                 :uri (str (:server db) "/elfeed/update")
+                 :uri (str (:url (:server db)) "/elfeed/update")
                  :params {:time (:update-time db)}
                  :format :json
                  :response-format (ajax/json-response-format {:keywords? true})

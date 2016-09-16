@@ -43,24 +43,104 @@
   (let [js-date (js/Date. (* time 1000))]
     (.format (goog.i18n.DateTimeFormat. "dd/MM/yyyy hh:mm") js-date)))
 
+(defn button [props label]
+  (let [styles (merge-with merge {:wrapper {:margin-top 8
+                                            :border-radius 2
+                                            :background-color (:secondary-text palette)
+                                            :padding 10}
+                                  :text {:color (:text palette)}} (:style props))]
+    [rn/touchable {:on-press (:on-press props) :disabled (:disabled? props)}
+     [rn/view {:style (:wrapper styles)}
+      [rn/text {:style (:text styles)} label]]]))
+
 (defn remote-error-message []
   [rn/view {:style {:padding 10
                     :background-color "#fff9c4"}}
    [rn/text "Network error. Check your wifi or your elfeed server."]])
 
+(defn configure-server-scene []
+  (let [server (subscribe [:server])
+        server-url (r/atom nil)
+        title "Configure your Elfeed server"
+        styles {:wrapper {:background-color (:white colors)
+                          :flex 1}
+                :header {:height 180
+                         :background-color (:primary palette)
+                         :justify-content "flex-end"
+                         :padding-left 28
+                         :padding-bottom 10}
+                :title {:font-size 20
+                        :color "white"}
+                :content  {:padding-horizontal 28
+                           :padding-top 20
+                           :height 342}
+                :message {:flex-direction "row"
+                          :flex-wrap "wrap"
+                          :color (:primary-text palette)}
+                :text-input {:margin-top 15}
+                :button {:background-color (:divider palette)
+                         :align-items "center"
+                         :justify-content "center"
+                         :margin-right 30
+                         :margin-top 0
+                         :width 72
+                         :height 46}
+                :footer {:height 46
+                         :align-items "flex-end"
+                         :background-color (:divider palette)}}]
+    (fn []
+      (let [button-disabled? (empty? @server-url)]
+        [rn/view {:style (:wrapper styles)}
+         [rn/view {:style (:header styles)}
+          [rn/text {:style (:title styles)} title]]
+         [rn/view {:style (:content styles)}
+          [rn/text {:style (:message styles)} "Please, check that your Elfeed server is running and accessible and enter its url."]
+          [rn/text {:style {:color (:primary palette)}} "Learn more"]
+          [rn/text-input {:style (:text-input styles)
+                          :placeholder "Enter your Elfeed URL:"
+                          :underline-color-android (when (false? (:valid? @server)) (:error palette))
+                          :keyboard-type "url"
+                          :on-change-text (fn [text]
+                                            (reset! server-url text)
+                                            (r/flush))
+                          :value @server-url}]
+          (when-let [error (:error-message @server)]
+            [rn/view
+             [rn/text {:style {:font-size 12
+                               :color (:error palette)}} error]])]
+         [rn/view {:style (:footer styles)}
+          [button {:on-press #(dispatch [:save-server @server-url])
+                   :disabled? button-disabled?
+                   :style {:wrapper (:button styles)
+                           :text {:color (if button-disabled?
+                                           (:secondary-text palette)
+                                           (:primary-text palette))}}} "NEXT >"]]]))))
+
 (defn settings-scene []
   (let [server (subscribe [:server])
-        styles {:wrapper {:margin-top 10
-                          :padding-left 16}}]
+        server-url (r/atom (:url @server))
+        styles {:wrapper {:flex 1
+                          :padding-top 10
+                          :padding-horizontal 16}
+                :button {:wrapper {:background-color (:white colors)
+                                   :margin-top 0
+                                   :padding 6
+                                   :width 106}
+                         :text {:font-weight "bold"
+                                :font-size 12
+                                :color (:dark-primary palette)}}}]
     (fn []
       [rn/view {:style (:wrapper styles)}
        [rn/text "Elfeed web url: "]
        [rn/text-input {:style {}
                        :keyboard-type "url"
+                       :underline-color-android (when (false? (:valid? @server)) (:error palette))
                        :on-change-text (fn [text]
-                                         (dispatch-sync [:update-server-value text])
+                                         (reset! server-url text)
                                          (r/flush))
-                       :value @server}]])))
+                       :value @server-url}]
+       [button {:on-press #(dispatch [:update-server @server-url])
+                :style (:button styles)} "UPDATE SERVER"]])))
 
 (defn entry-quick-actions [entry]
   (let [styles {:wrapper {:flex 1
@@ -78,12 +158,10 @@
   (let [loading? (subscribe [:fetching-entry?])
         remote-error (subscribe [:remote-error :entry])
         entry-content (subscribe [:current-entry])
-        styles {:wrapper {:flex 1
-                          :background-color "#FFFFFF"}
+        styles {:wrapper {:flex 1}
                 :header {:margin-bottom 10
-                         :padding-top 10
-                         :padding-left 10
-                         :padding-bottom 10
+                         :padding-vertical 10
+                         :padding-horizontal 10
                          :border-bottom-color (:divider palette)
                          :border-bottom-width 1}
                 :loading-content {:flex 1
@@ -156,11 +234,36 @@
         [rn/text {:style (:secondary-text styles)} (str "»" (:title (:feed entry)))]]]]]))
 
 (defn update-time-info [update-time]
-  (let [styles {:wrapper {:padding-left 16}
+  (let [styles {:wrapper {:padding-vertical 6
+                          :padding-left 16}
                 :value {:font-weight "500"}}]
     [rn/view {:style (:wrapper styles)}
      [rn/text {:style (:value styles)}
       (str "Last update at: ") (format-update-time update-time)]]))
+
+(defn loading-component []
+  (let [styles {:wrapper {:height 34
+                          :align-items "center"
+                          :padding-left 20
+                          :flex-direction "row"
+                          :background-color (:secondary-text palette)}
+                :text {:margin-left 20 :color "white"}}]
+    [rn/view {:style (:wrapper styles)}
+     [rn/activity-indicator {:color "white"}]
+     [rn/text {:style (:text styles)} "Loading entries..."]]))
+
+(defn no-entries-component []
+  (let [styles {:wrapper {:height 400
+                          :justify-content "center"
+                          :align-items "center"}
+                :button {:margin-top 10
+                         :border-radius 2
+                         :background-color (:secondary-text palette)
+                         :padding 10}
+                :button-text {:color (:white colors)}}]
+    [rn/view {:style (:wrapper styles)}
+     [rn/text "There are no entries"]
+     [button {:on-press #(dispatch [:fetch-content])} "REFRESH"]]))
 
 (defn entries-scene []
   (let [loading (subscribe [:loading?])
@@ -168,12 +271,9 @@
         remote-error (subscribe [:remote-error :entries])
         entries (subscribe [:entries])
         recent-reads (subscribe [:recent-reads])
-        styles {:wrapper {:flex 1
-                          :flex-direction "row"
-                          :background-color "#FFFFFF"}
-                :loading-info {:margin 10}
-                :list {:margin-top 8
-                       :padding-bottom 8}
+        styles {:wrapper {:flex 1}
+                :list {:margin-top 0
+                       :padding-bottom 0}
                 :separator {:height 1
                             :background-color "#E0E0E0"}}]
     (fn []
@@ -183,35 +283,34 @@
                         (clj->js '("s1")))
             hack @recent-reads]
         [rn/view {:style (:wrapper styles)}
-         (if @loading
-           [rn/view {:style (:loading-info styles)}
-            [rn/text "Loading entries"]
-            [rn/activity-indicator]]
-           [rn/view {:style {:flex 1}}
-            (when @remote-error
-              [remote-error-message])
-            [rn/swipeable-list-view {:dataSource datasource
-                                     :max-swipe-distance 50
-                                     :bounceFirstRowOnMount false
-                                     :refresh-control (r/as-element [rn/refresh-control {:refreshing false
-                                                                                         :on-refresh (fn []
-                                                                                                       (dispatch [:fetch-update-time])
-                                                                                                       (dispatch [:fetch-entries]))}])
-                                     :style (:list styles)
-                                     :enableEmptySections true
-                                     :render-section-header (fn [_ _]
-                                                              (when (> @update-time 0)
-                                                                (r/as-element [update-time-info @update-time])))
-                                     :render-quick-actions (fn [row-data section-id row-id]
-                                                             (r/as-element [entry-quick-actions (js->clj row-data :keywordize-keys true)]))
-                                     :render-row (fn [data section-id row-id]
-                                                   (let [entry-data (js->clj data :keywordize-keys true)
-                                                         unread? (and (boolean (some #{"unread"} (:tags entry-data)))
-                                                                      (not (boolean (some #{(:webid entry-data)} @recent-reads))))]
-                                                     (r/as-element [entry-row (merge  entry-data {:unread? unread?})])))
-                                     :render-separator (fn [section-id row-id _]
-                                                         (r/as-element [rn/view {:key (str section-id "-" row-id)
-                                                                                 :style (:separator styles)}]))}]])]))))
+         (when @loading
+           [loading-component])
+         [rn/view {:style {:flex 1}}
+          (when @remote-error
+            [remote-error-message])
+          (when @entries
+            (if-not (empty? @entries)
+              [rn/swipeable-list-view {:dataSource datasource
+                                       :max-swipe-distance 50
+                                       :bounceFirstRowOnMount false
+                                       :refresh-control (r/as-element [rn/refresh-control {:refreshing false
+                                                                                           :on-refresh #(dispatch [:fetch-content])}])
+                                       :style (:list styles)
+                                       :enableEmptySections true
+                                       :render-section-header (fn [_ _]
+                                                                (when (> @update-time 0)
+                                                                  (r/as-element [update-time-info @update-time])))
+                                       :render-quick-actions (fn [row-data section-id row-id]
+                                                               (r/as-element [entry-quick-actions (js->clj row-data :keywordize-keys true)]))
+                                       :render-row (fn [data section-id row-id]
+                                                     (let [entry-data (js->clj data :keywordize-keys true)
+                                                           unread? (and (boolean (some #{"unread"} (:tags entry-data)))
+                                                                        (not (boolean (some #{(:webid entry-data)} @recent-reads))))]
+                                                       (r/as-element [entry-row (merge  entry-data {:unread? unread?})])))
+                                       :render-separator (fn [section-id row-id _]
+                                                           (r/as-element [rn/view {:key (str section-id "-" row-id)
+                                                                                   :style (:separator styles)}]))}]
+              [no-entries-component]))]]))))
 
 (defn drawer-component []
   (let [styles {:section {}
@@ -247,7 +346,7 @@
   (let [ref-icon (r/atom nil)
         styles {:button {:padding-vertical 16
                          :padding-horizontal 8}
-                :icon {:color (:text colors)}}
+                :icon {:color (:text palette)}}
         actions [{:label "Open in browser"
                   :action (fn [] (dispatch [:open-entry-in-browser]))}]]
     (fn []
@@ -267,6 +366,7 @@
 
 (defmulti scene #(keyword (aget % "scene" "route" "key")))
 
+(defmethod scene :configure-server [scene-props] [configure-server-scene])
 (defmethod scene :entries [scene-props] [entries-scene])
 (defmethod scene :entry [scene-props] [entry-scene])
 (defmethod scene :settings [scene-props] [settings-scene])
@@ -276,7 +376,7 @@
     [rn/navigation-header-title {:text-style {:color (:text palette)}} title]))
 
 (defn nav-left-button [scene-props]
-  (let [index (aget scene-props "scene" "index")
+  (let [scene-key (aget scene-props "scene" "route" "key")
         styles {:button-container {:flex 1
                                    :flex-direction "row"
                                    :align-items "center"
@@ -285,7 +385,7 @@
                          :height 24
                          :width 24
                          :margin 16}}
-        root? (= index 0)
+        root? (= scene-key "entries")
         icon-name (if root? "menu" "arrow-back")
         on-press (if root? #(dispatch [:drawer/open nil]) #(dispatch [:nav/pop nil]))]
     [rn/touchable-opacity {:style (:button-container styles) :on-press on-press}
@@ -296,12 +396,14 @@
     [entry-actions-button]))
 
 (defn header [scene-props]
-  [rn/navigation-header (assoc
-                         scene-props
-                         :style {:background-color "#00796b"}
-                         :render-title-component #(r/as-element [nav-title %])
-                         :render-left-component #(r/as-element [nav-left-button %])
-                         :render-right-component #(r/as-element [nav-right-button %]))])
+  (when-not (or (= (:key (:route (:scene scene-props))) "configure-server")
+                (= (:key (:route (:scene scene-props))) "success-configuration"))
+    [rn/navigation-header (assoc
+                           scene-props
+                           :style {:background-color (:primary palette)}
+                           :render-title-component #(r/as-element [nav-title %])
+                           :render-left-component #(r/as-element [nav-left-button %])
+                           :render-right-component #(r/as-element [nav-right-button %]))]))
 
 (defn app-root []
   (let [nav (subscribe [:nav/state])]
@@ -319,11 +421,13 @@
                            :ref (fn [ref-drawer]
                                   (dispatch [:drawer/set ref-drawer]))}
          [rn/status-bar {:background-color (:dark-primary palette)}]
-         [rn/navigation-card-stack {:on-navigate-back #(dispatch [:nav/pop nil])
-                                    :render-header #(r/as-element [header (js->clj % :keywordize-keys true)])
-                                    :navigation-state @nav
-                                    :style {:flex 1}
-                                    :render-scene #(r/as-element [scene %])}]])})))
+         (when @nav
+           [rn/navigation-card-stack {:on-navigate-back #(dispatch [:nav/pop nil])
+                                      :render-header #(r/as-element [header (js->clj % :keywordize-keys true)])
+                                      :navigation-state @nav
+                                      :style {:flex 1}
+                                      :card-style {:background-color (:white colors)}
+                                      :render-scene #(r/as-element [scene %])}])])})))
 
 (defn init []
   (dispatch-sync [:boot])

@@ -9,11 +9,9 @@
   (s/keys :req-un [::server]))
 
 ;; initial state of app-db
-(def app-db {:nav {:index 0
-                   :routes [{:key :entries
-                             :title "All entries"}]}
+(def app-db {:nav nil
              :drawer {:open? false
                       :ref nil}
              :update-time 0
-             :server "http://localhost:8080"
-             :entries '()})
+             :server {:url nil :valid? nil :checking? nil}
+             :entries nil})
