@@ -254,17 +254,6 @@
      [rn/text {:style (:text styles)}
       (str "LAST UPDATE: ") (format-update-time update-time)]]))
 
-(defn loading-component []
-  (let [styles {:wrapper {:height 34
-                          :align-items "center"
-                          :padding-left 20
-                          :flex-direction "row"
-                          :background-color (:secondary-text palette)}
-                :text {:margin-left 20 :color "white"}}]
-    [rn/view {:style (:wrapper styles)}
-     [rn/activity-indicator {:color "white"}]
-     [rn/text {:style (:text styles)} "Loading entries..."]]))
-
 (defn no-entries-component []
   (let [styles {:wrapper {:height 400
                           :justify-content "center"
@@ -296,8 +285,6 @@
                         (clj->js '("s1")))
             hack @recent-reads]
         [rn/view {:style (:wrapper styles)}
-         (when @loading
-           [loading-component])
          [rn/view {:style {:flex 1}}
           (when @remote-error
             [remote-error-message])
@@ -306,7 +293,7 @@
               [rn/swipeable-list-view {:dataSource datasource
                                        :max-swipe-distance 50
                                        :bounceFirstRowOnMount false
-                                       :refresh-control (r/as-element [rn/refresh-control {:refreshing false
+                                       :refresh-control (r/as-element [rn/refresh-control {:refreshing @loading
                                                                                            :on-refresh #(dispatch [:fetch-content])}])
                                        :style (:list styles)
                                        :enableEmptySections true
