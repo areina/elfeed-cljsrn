@@ -6,6 +6,17 @@
             [elfeed-cljsrn.subs])
   (:import [goog.i18n DateTimeFormat]))
 
+(def colors {:white "#FFFFFF"})
+(def palette {:dark-primary "#00796B"
+              :primary "#009688"
+              :light-primary "#B2DFDB"
+              :accent "#CDDC39"
+              :text (:white colors)
+              :primary-text "#212121"
+              :secondary-text "#757575"
+              :divider "#BDBDBD"
+              :error "#F44336"})
+
 (def MaterialIcons (js/require "react-native-vector-icons/MaterialIcons"))
 (def icon (r/adapt-react-class MaterialIcons))
 
