@@ -24,6 +24,20 @@
 (defn unlisten-back-button! [navigation-state]
   (.removeEventListener (.-BackAndroid rn/ReactNative) "hardwareBackPress" #(go-back! @navigation-state)))
 
+(defn handle-connectivity-change [connected?]
+  (dispatch [:connection/set connected?]))
+
+(defn listen-connectivity []
+  (.addEventListener (.-isConnected rn/net-info) "change" handle-connectivity-change))
+
+(defn unlisten-connectivity []
+  (.removeEventListener (.-isConnected rn/net-info) "change" handle-connectivity-change))
+
+(defn check-connection []
+  (-> (.-isConnected rn/net-info)
+      (.fetch)
+      (.then handle-connectivity-change)))
+
 (defn remote-error-message []
   [rn/view {:style {:padding 10
                     :background-color "#fff9c4"}}
@@ -127,8 +141,13 @@
 (defn app-root []
   (let [nav (subscribe [:nav/state])]
     (r/create-class
-     {:component-did-mount #(listen-back-button! nav)
-      :component-will-unmount #(unlisten-back-button! nav)
+     {:component-did-mount (fn []
+                             (listen-back-button! nav)
+                             (check-connection)
+                             (listen-connectivity))
+      :component-will-unmount (fn []
+                                (unlisten-back-button! nav)
+                                (unlisten-connectivity))
       :display-name "AppRoot"
       :reagent-render
       (fn []

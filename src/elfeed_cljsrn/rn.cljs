@@ -24,3 +24,4 @@
 (def refresh-control (r/adapt-react-class (.-RefreshControl ReactNative)))
 (def ui-manager (.-UIManager ReactNative))
 (def status-bar (r/adapt-react-class (.-StatusBar ReactNative)))
+(def net-info (.-NetInfo ReactNative))

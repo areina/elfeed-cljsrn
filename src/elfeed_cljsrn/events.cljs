@@ -312,3 +312,8 @@
    (-> db
        (update-in [:nav :index] dec-to-zero)
        (update-in [:nav :routes] pop))))
+
+(reg-event-db
+ :connection/set
+ (fn [db [_ value]]
+   (assoc db :connected? value)))
