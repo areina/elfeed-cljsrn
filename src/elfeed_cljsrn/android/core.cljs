@@ -7,16 +7,27 @@
             [elfeed-cljsrn.subs])
   (:import [goog.i18n DateTimeFormat]))
 
-(def colors {:white "#FFFFFF"})
-(def palette {:dark-primary "#00796B"
-              :primary "#009688"
-              :light-primary "#B2DFDB"
+(def colors {:white "#FFFFFF"
+             :grey50 "#FAFAFA"
+             :grey100 "#F5F5F5"
+             :grey200 "#EEEEEE"
+             :grey300 "#E0E0E0"
+             :grey400 "#BDBDBD"
+             :grey600 "#757575"
+             :grey900 "#212121"
+             :red500 "#F44336"
+             :teal100 "#B2DFDB"
+             :teal500 "#009688"
+             :teal700 "#00796B"})
+(def palette {:dark-primary (:teal700 colors)
+              :primary (:teal500 colors)
+              :light-primary (:teal100 colors)
               :accent "#CDDC39"
               :text (:white colors)
-              :primary-text "#212121"
-              :secondary-text "#757575"
-              :divider "#BDBDBD"
-              :error "#F44336"})
+              :primary-text (:grey900 colors)
+              :secondary-text (:grey600 colors)
+              :divider (:grey400 colors)
+              :error (:red500 colors)})
 
 (def MaterialIcons (js/require "react-native-vector-icons/MaterialIcons"))
 (def icon (r/adapt-react-class MaterialIcons))
@@ -77,7 +88,7 @@
                           :flex-wrap "wrap"
                           :color (:primary-text palette)}
                 :text-input {:margin-top 15}
-                :button {:background-color (:divider palette)
+                :button {:background-color (:grey300 colors)
                          :align-items "center"
                          :justify-content "center"
                          :margin-right 30
@@ -86,7 +97,7 @@
                          :height 46}
                 :footer {:height 46
                          :align-items "flex-end"
-                         :background-color (:divider palette)}}]
+                         :background-color (:grey300 colors)}}]
     (fn []
       (let [button-disabled? (empty? @server-url)]
         [rn/view {:style (:wrapper styles)}
@@ -194,7 +205,7 @@
 
 (defn entry-row [entry]
   (let [styles {:list-wrapper {:flex-direction "row"
-                               :background-color (if (:unread? entry) "#FFFFFF" "#F5F5F5")
+                               :background-color (if (:unread? entry) (:white colors) (:grey100 colors))
                                :padding-left 16
                                :padding-right 16
                                :height 72
@@ -215,7 +226,7 @@
                                  :font-size 14
                                  :color "rgba(0,0,0,.54)"}}]
     [rn/touchable {:key (:webid entry)
-                   :underlay-color "#f5f5f5"
+                   :underlay-color (:grey-100 colors)
                    :on-press (fn [_]
                                (dispatch [:fetch-entry-content entry])
                                (navigate-to :entry))}
@@ -233,12 +244,15 @@
         [rn/text {:style (:secondary-text styles)} (str "»" (:title (:feed entry)))]]]]]))
 
 (defn update-time-info [update-time]
-  (let [styles {:wrapper {:padding-vertical 6
+  (let [styles {:wrapper {:background-color (:grey300 colors)
+                          :padding-vertical 6
                           :padding-left 16}
-                :value {:font-weight "500"}}]
+                :text {:font-size 12
+                       :font-weight "500"
+                       :color (:secondary-text palette)}}]
     [rn/view {:style (:wrapper styles)}
-     [rn/text {:style (:value styles)}
-      (str "Last update at: ") (format-update-time update-time)]]))
+     [rn/text {:style (:text styles)}
+      (str "LAST UPDATE: ") (format-update-time update-time)]]))
 
 (defn loading-component []
   (let [styles {:wrapper {:height 34
@@ -274,7 +288,7 @@
                 :list {:margin-top 0
                        :padding-bottom 0}
                 :separator {:height 1
-                            :background-color "#E0E0E0"}}]
+                            :background-color (:grey300 colors)}}]
     (fn []
       (let [datasource (.cloneWithRowsAndSections
                         (rn/ReactNative.SwipeableListView.getNewDataSource.)
