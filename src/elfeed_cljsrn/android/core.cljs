@@ -310,9 +310,9 @@
                                                                                            :on-refresh #(dispatch [:fetch-content])}])
                                        :style (:list styles)
                                        :enableEmptySections true
-                                       :render-section-header (fn [_ _]
-                                                                (when (> @update-time 0)
-                                                                  (r/as-element [update-time-info @update-time])))
+                                       :render-header (fn [_ _]
+                                                        (when (> @update-time 0)
+                                                          (r/as-element [update-time-info @update-time])))
                                        :render-quick-actions (fn [row-data section-id row-id]
                                                                (r/as-element [entry-quick-actions (js->clj row-data :keywordize-keys true)]))
                                        :render-row (fn [data section-id row-id]
