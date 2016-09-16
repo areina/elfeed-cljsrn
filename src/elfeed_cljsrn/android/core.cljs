@@ -243,14 +243,6 @@
         [icon {:style (:icon styles) :name "settings" :size 20}]
         [rn/text {:style (:value styles)} "Settings" ]]]]]))
 
-(defn navbar-title [title]
-  (let [styles {:title {:width 200
-                        :color "#e0f2f1"
-                        :font-size 20
-                        :font-weight "500"
-                        :margin-vertical 15}}]
-    [rn/text {:style (:title styles)} title]))
-
 (defn entry-actions-button []
   (let [ref-icon (r/atom nil)
         styles {:button {:padding-vertical 16
