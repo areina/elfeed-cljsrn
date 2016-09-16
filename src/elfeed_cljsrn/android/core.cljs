@@ -318,6 +318,7 @@
                            :render-navigation-view #(r/as-element [drawer-component])
                            :ref (fn [ref-drawer]
                                   (dispatch [:drawer/set ref-drawer]))}
+         [rn/status-bar {:background-color (:dark-primary palette)}]
          [rn/navigation-card-stack {:on-navigate-back #(dispatch [:nav/pop nil])
                                     :render-header #(r/as-element [header (js->clj % :keywordize-keys true)])
                                     :navigation-state @nav

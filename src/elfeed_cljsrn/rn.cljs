@@ -23,3 +23,4 @@
 (def activity-indicator (r/adapt-react-class (.-ActivityIndicator ReactNative)))
 (def refresh-control (r/adapt-react-class (.-RefreshControl ReactNative)))
 (def ui-manager (.-UIManager ReactNative))
+(def status-bar (r/adapt-react-class (.-StatusBar ReactNative)))
