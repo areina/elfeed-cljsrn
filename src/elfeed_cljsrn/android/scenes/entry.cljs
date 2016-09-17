@@ -11,6 +11,16 @@
                     :background-color "#fff9c4"}}
    [rn/text "Network error. Check your wifi or your elfeed server."]])
 
+(defn tag [label]
+  (let [styles {:wrapper {:background-color (:grey300 colors)
+                          :margin-left 4
+                          :padding-vertical 2
+                          :padding-horizontal 4}
+                :text {:font-size 12
+                       :color (:primary-text colors)}}]
+    [rn/view {:style (:wrapper styles)}
+     [rn/text {:style (:text styles)} label]]))
+
 (defn entry-scene [entry]
   (let [loading? (subscribe [:fetching-entry?])
         remote-error (subscribe [:remote-error :entry])
@@ -21,6 +31,8 @@
                          :padding-horizontal 10
                          :border-bottom-color (:divider palette)
                          :border-bottom-width 1}
+                :feed-info {:flex 1
+                            :flex-direction "row"}
                 :loading-content {:flex 1
                                   :padding-left 10
                                   :justify-content "center"
@@ -35,7 +47,9 @@
          [remote-error-message])
        [rn/view {:style (:header styles)}
         [rn/text (:title @entry-content)]
-        [rn/text (str "» " (:title (:feed @entry-content)))]]
+        [rn/view {:style (:feed-info styles)}
+         [rn/text (str "» " (:title (:feed @entry-content)))]
+         (for [tag-label (:tags @entry-content)] ^{:key tag-label} [tag tag-label])]]
        [rn/view {:style (if @loading? (:loading-content styles) (:content styles))}
         (if @loading?
           [rn/activity-indicator]
