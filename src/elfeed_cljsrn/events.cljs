@@ -27,8 +27,7 @@
     (let [explain-data (s/explain-data spec db)]
       (throw (ex-info (str "Spec check failed: " explain-data) explain-data)))))
 
-;;TODO Use this interceptor
-(def check-spec-interceptor
+(def check-spec
   (if goog.DEBUG
     (after (partial check-and-throw ::db/app-db))
     []))
@@ -82,7 +81,6 @@
 
 (reg-event-fx
  :load-localstore
- debug
  (fn [{db :db} _]
    {:get-localstore {:on-success [:success-load-localstore]}
     :db (assoc db :loading-ls? true)}))
@@ -96,6 +94,7 @@
 
 (reg-event-fx
  :update-server
+ [check-spec]
  (fn [{db :db} [_ url]]
    {:http-xhrio {:method :post
                  :uri (str url "/elfeed/update")
@@ -107,12 +106,13 @@
 
 (reg-event-fx
  :success-update-server
- ->ls
+ [->ls check-spec]
  (fn [{db :db} _]
    {:db (update db :server merge {:valid? true :checking? false})}))
 
 (reg-event-fx
  :failure-update-server
+ [check-spec]
  (fn [{db :db} [_ error]]
    {:db (assoc db :server {:url nil :valid? false :error-message (:status-text error) :checking? false})}))
 
@@ -129,7 +129,7 @@
 
 (reg-event-fx
  :success-save-server
- ->ls
+ [->ls check-spec]
  (fn [{db :db} _]
    {:dispatch-n (list [:nav/push (:entries routes)] [:fetch-content])
     :db (update db :server merge {:valid? true :checking? false})}))
@@ -189,6 +189,7 @@
 
 (reg-event-fx
  :mark-entry-as-read
+ [check-spec]
  (fn [{db :db} [_ entry]]
    {:http-xhrio {:method :put
                  :uri (str (:url (:server db)) "/elfeed/tags")
@@ -204,16 +205,19 @@
 
 (reg-event-db
  :success-mark-entry-as-read
+ [check-spec]
  (fn [db [_ response]]
    db))
 
 (reg-event-db
  :failure-mark-entry-as-read
+ [check-spec]
  (fn [db [_ error]]
    db))
 
 (reg-event-fx
  :fetch-entry-content
+ [check-spec]
  (fn [{db :db} [_ entry]]
    {:http-xhrio {:method :post
                  :uri (str (:url (:server db)) "/elfeed/content/" (:content entry))
@@ -229,7 +233,7 @@
 
 (reg-event-db
  :success-fetch-entry-content
- ->ls
+ [->ls check-spec]
  (fn [db [_ entry response]]
    (dispatch [:mark-entry-as-read entry])
    (-> db
@@ -238,6 +242,7 @@
 
 (reg-event-db
  :failure-fetch-entry-content
+ [check-spec]
  (fn [db [_ error]]
    (-> db
        (assoc :fetching-entry? false)
@@ -301,6 +306,7 @@
 
 (reg-event-db
  :nav/push
+ [check-spec]
  (fn [db [_ value]]
    (-> db
        (update-in [:nav :index] inc)
@@ -308,6 +314,7 @@
 
 (reg-event-db
  :nav/pop
+ [check-spec]
  (fn [db [_ _]]
    (-> db
        (update-in [:nav :index] dec-to-zero)
@@ -315,5 +322,6 @@
 
 (reg-event-db
  :connection/set
+ [debug]
  (fn [db [_ value]]
    (assoc db :connected? value)))
