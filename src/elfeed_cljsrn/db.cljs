@@ -21,7 +21,7 @@
 (s/def :server/url string?)
 (s/def :server/valid? boolean?)
 (s/def :server/checking? boolean?)
-(s/def :server/error-message string)
+(s/def :server/error-message string?)
 (s/def ::server (s/keys :req-un [:server/url :server/valid? :server/checking?]
                         :opt-un [:server/error-message]))
 
