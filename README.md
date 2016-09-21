@@ -1,9 +1,20 @@
 # elfeed-cljsrn
 
 A mobile client for [Elfeed](https://github.com/skeeto/elfeed/) built with React
-Native and written in ClojureScript. Elfeed is an excellent RSS reader for Emacs
-and I was using it daily but now I'm traveling around and I need a basic mobile
-app. Also, this was a perfect excuse to play a bit with RN and CLJS. 
+Native and written in ClojureScript.
+
+## Download
+
+Elfeed for Android is available
+in [Google Play](https://play.google.com/store/apps/details?id=com.elfeedcljsrn)
+or you can download APK's directly
+from [Github releases](https://github.com/areina/elfeed-cljsrn/releases)
+
+## Motivation
+
+Elfeed is an excellent RSS reader for Emacs and I was using it daily but now I'm
+traveling around and I need a basic mobile app. Also, this was a perfect excuse
+to play a bit with RN and CLJS.
 
 This project uses:
 * [React Native](https://facebook.github.io/react-native/)
@@ -32,7 +43,7 @@ I use Emacs for development and Genymotion as an Android emulator.
 
 ## Todo
 
-- Publish on Google Play
+- ~~Publish on Google Play~~
 - Elfeed: Authentication (auth basic or something more complex)
 - ~~Elfeed: Mark entry as read~~
 - ~~App: Update code to new re-frame v0.8~~
