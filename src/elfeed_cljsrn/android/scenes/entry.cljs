@@ -75,7 +75,7 @@ window.addEventlistener(\"resize\", updateHeight);
          [rn/view {:style (:loading-content styles)} [rn/activity-indicator]]
          [rn/scroll-view {:style (:content styles)}
           [rn/view
-           [rn/web-view {:style {:height (+ 200 @content-height)}
+           [rn/web-view {:style {:height (+ 100 @content-height)}
                          :onNavigationStateChange (fn [event]
                                                     (reset! content-height (js/parseInt (aget event "title") 10)))
                          :javaScriptEnabled true
