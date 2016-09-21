@@ -39,9 +39,9 @@
                                   :justify-content "center"
                                   :align-items "center"}
                 :content {:padding-horizontal 10
-                          :padding-vertical 0}
-                :web-view {:height 600}}
+                          :padding-vertical 0}}
         script "
+<script>
 ;(function() {
 var wrapper = document.createElement(\"div\");
 wrapper.id = \"height-wrapper\";
@@ -66,6 +66,7 @@ window.addEventlistener(\"resize\", updateHeight);
       [rn/view {:style (:wrapper styles)}
        (when @remote-error
          [remote-error-message])
+       [rn/text @content-height]
        [rn/view {:style (:header styles)}
         [rn/text (:title @entry-content)]
         [rn/view {:style (:feed-info styles)}
@@ -75,7 +76,7 @@ window.addEventlistener(\"resize\", updateHeight);
          [rn/view {:style (:loading-content styles)} [rn/activity-indicator]]
          [rn/scroll-view {:style (:content styles)}
           [rn/view
-           [rn/web-view {:style {:height @content-height}
+           [rn/web-view {:style {:height (+ 200 @content-height)}
                          :onNavigationStateChange (fn [event]
                                                     (reset! content-height (js/parseInt (aget event "title") 10)))
                          :javaScriptEnabled true
