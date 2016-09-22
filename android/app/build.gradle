@@ -123,6 +123,7 @@ android {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
             signingConfig signingConfigs.release
+	    minifyEnabled true
         }
     }
     // applicationVariants are e.g. debug, release
