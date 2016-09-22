@@ -53,3 +53,4 @@ I use Emacs for development and Genymotion as an Android emulator.
 - ~~RN: Use SwipeableListView to mark an entry as read from the list~~
 - iOS version (I won't work on this because I don't use iOS, but I'm happy
   to help you if you are interested)
+- Version for tablets
