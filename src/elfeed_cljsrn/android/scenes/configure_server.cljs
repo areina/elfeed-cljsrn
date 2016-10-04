@@ -8,7 +8,7 @@
 
 (defn configure-server-scene []
   (let [server (subscribe [:server])
-        server-url (r/atom nil)
+        server-url (r/atom "http://")
         title "Configure your Elfeed server"
         styles {:wrapper {:background-color (:white colors)
                           :flex 1}
@@ -25,7 +25,8 @@
                 :message {:flex-direction "row"
                           :flex-wrap "wrap"
                           :color (:primary-text palette)}
-                :text-input {:margin-top 15}
+                :input {:margin-top 25}
+                :text-input {:height 50}
                 :button {:background-color (:grey300 colors)
                          :align-items "center"
                          :justify-content "center"
@@ -44,14 +45,16 @@
          [rn/view {:style (:content styles)}
           [rn/text {:style (:message styles)} "Please, check that your Elfeed server is running and accessible and enter its url."]
           [rn/text {:style {:color (:primary palette)}} "Learn more"]
-          [rn/text-input {:style (:text-input styles)
-                          :placeholder "Enter your Elfeed URL:"
-                          :underline-color-android (when (false? (:valid? @server)) (:error palette))
-                          :keyboard-type "url"
-                          :on-change-text (fn [text]
-                                            (reset! server-url text)
-                                            (r/flush))
-                          :value @server-url}]
+          [rn/view {:style (:input styles)}
+           [rn/text "Enter your Elfeed URL:"]
+           [rn/text-input {:style (:text-input styles)
+                           :placeholder "http://"
+                           :underline-color-android (when (false? (:valid? @server)) (:error palette))
+                           :keyboard-type "url"
+                           :on-change-text (fn [text]
+                                             (reset! server-url text)
+                                             (r/flush))
+                           :value @server-url}]]
           (when-let [error (:error-message @server)]
             [rn/view
              [rn/text {:style {:font-size 12

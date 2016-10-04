@@ -18,6 +18,9 @@
     (dec arg)
     arg))
 
+(defn valid-url? [url]
+  (clojure.string/starts-with? url "http://"))
+
 ;; -- Interceptors -------------------------------------------------------------
 
 (defn check-and-throw
@@ -119,13 +122,15 @@
 (reg-event-fx
  :save-server
  (fn [{db :db} [_ url ]]
-   {:http-xhrio {:method :post
-                 :uri (str url "/elfeed/update")
-                 :format :json
-                 :response-format (ajax/json-response-format {:keywords? true})
-                 :on-success [:success-save-server]
-                 :on-failure [:failure-save-server]}
-    :db (assoc db :server {:url url :checking? true})}))
+   (let [events {:db (assoc db :server {:url url :checking? true})}]
+     (if (valid-url? url)
+       (merge events {:http-xhrio {:method :post
+                                   :uri (str url "/elfeed/update")
+                                   :format :json
+                                   :response-format (ajax/json-response-format {:keywords? true})
+                                   :on-success [:success-save-server]
+                                   :on-failure [:failure-save-server]}})
+       (merge events {:dispatch [:failure-save-server {:status-text "Invalid URL (should start with http://)"}]})))))
 
 (reg-event-fx
  :success-save-server
