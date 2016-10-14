@@ -85,17 +85,20 @@
        [icon {:style (:icon styles) :name "archive" :size 22}]]]]))
 
 (defn no-entries-component []
-  (let [styles {:wrapper {:height 400
-                          :justify-content "center"
+  (let [loading? (subscribe [:loading?])
+        styles {:wrapper {:height 300
                           :align-items "center"}
                 :button {:margin-top 10
                          :border-radius 2
                          :background-color (:secondary-text palette)
                          :padding 10}
                 :button-text {:color (:white colors)}}]
-    [rn/view {:style (:wrapper styles)}
-     [rn/text "There are no entries"]
-     [button {:on-press #(dispatch [:fetch-content])} "REFRESH"]]))
+    (fn []
+      (let [label (if @loading? "LOADING..." "REFRESH")
+            on-press-fn (if @loading? nil #(dispatch [:fetch-content]))]
+        [rn/view {:style (:wrapper styles)}
+         [rn/text "There are no entries"]
+         [button {:on-press on-press-fn} label]]))))
 
 (defn entries-scene []
   (let [loading (subscribe [:loading?])
@@ -118,26 +121,25 @@
          [rn/view {:style {:flex 1}}
           (when @remote-error
             [remote-error-message])
-          (when @entries
-            (if-not (empty? @entries)
-              [rn/swipeable-list-view {:dataSource datasource
-                                       :max-swipe-distance 50
-                                       :bounceFirstRowOnMount false
-                                       :refresh-control (r/as-element [rn/refresh-control {:refreshing @loading
-                                                                                           :on-refresh #(dispatch [:fetch-content])}])
-                                       :style (:list styles)
-                                       :enableEmptySections true
-                                       :render-header (fn [_ _]
-                                                        (when (> @update-time 0)
-                                                          (r/as-element [update-time-info @update-time])))
-                                       :render-quick-actions (fn [row-data section-id row-id]
-                                                               (r/as-element [entry-quick-actions (js->clj row-data :keywordize-keys true)]))
-                                       :render-row (fn [data section-id row-id]
-                                                     (let [entry-data (js->clj data :keywordize-keys true)
-                                                           unread? (and (boolean (some #{"unread"} (:tags entry-data)))
-                                                                        (not (boolean (some #{(:webid entry-data)} @recent-reads))))]
-                                                       (r/as-element [entry-row (merge  entry-data {:unread? unread?})])))
-                                       :render-separator (fn [section-id row-id _]
-                                                           (r/as-element [rn/view {:key (str section-id "-" row-id)
-                                                                                   :style (:separator styles)}]))}]
-              [no-entries-component]))]]))))
+          [rn/swipeable-list-view {:dataSource datasource
+                                   :max-swipe-distance 50
+                                   :bounceFirstRowOnMount false
+                                   :refresh-control (r/as-element [rn/refresh-control {:refreshing @loading
+                                                                                       :on-refresh #(dispatch [:fetch-content])}])
+                                   :style (:list styles)
+                                   :enableEmptySections true
+                                   :render-header (fn [_ _]
+                                                    (when (> @update-time 0)
+                                                      (r/as-element [update-time-info @update-time])))
+                                   :render-quick-actions (fn [row-data section-id row-id]
+                                                           (r/as-element [entry-quick-actions (js->clj row-data :keywordize-keys true)]))
+                                   :render-row (fn [data section-id row-id]
+                                                 (let [entry-data (js->clj data :keywordize-keys true)
+                                                       unread? (and (boolean (some #{"unread"} (:tags entry-data)))
+                                                                    (not (boolean (some #{(:webid entry-data)} @recent-reads))))]
+                                                   (r/as-element [entry-row (merge  entry-data {:unread? unread?})])))
+                                   :render-separator (fn [section-id row-id _]
+                                                       (r/as-element [rn/view {:key (str section-id "-" row-id)
+                                                                               :style (:separator styles)}]))}]
+          (when (empty? @entries)
+            [no-entries-component])]]))))
