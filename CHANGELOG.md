@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file. This change
 ### Fixed
 - Validate url in configure scene
 
+### Changed
+- Add visual feedback pushing the refresh button when the entries list is empty
+
 ### Added
 - Splash screen
 
