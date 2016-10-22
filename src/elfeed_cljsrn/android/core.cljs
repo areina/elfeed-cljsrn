@@ -3,7 +3,7 @@
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [elfeed-cljsrn.rn :as rn]
             [elfeed-cljsrn.navigation :refer [navigate-back navigate-to]]
-            [elfeed-cljsrn.ui :as ui :refer [colors palette icon]]
+            [elfeed-cljsrn.ui :as ui :refer [colors palette icon header-icon-button]]
             [elfeed-cljsrn.android.scenes.configure-server :refer [configure-server-scene]]
             [elfeed-cljsrn.android.scenes.settings :refer [settings-scene]]
             [elfeed-cljsrn.android.scenes.entries :refer [entries-scene]]
@@ -81,21 +81,19 @@
         actions [{:label "Open in browser"
                   :action (fn [] (dispatch [:open-entry-in-browser]))}]]
     (fn []
-      [rn/view {:style {:flex 1
-                        :flex-direction "row"}}
-       ;; this empty view is a hack for showPopupmenu
-       ;; it adds the popup next to the tag, so we need an element before the
-       ;; icon.
-       [rn/view [rn/text {:ref (fn [ref] (reset! ref-icon ref))} ""]]
-       [rn/touchable {:on-press (fn [e]
-                                  (.showPopupMenu rn/ui-manager (.findNodeHandle rn/ReactNative @ref-icon)
-                                                  (clj->js (map :label actions))
-                                                  (fn [] )
-                                                  (fn [e i]
-                                                    (when i
-                                                      ((:action (nth actions i)))))))}
-        [rn/view {:style (:button styles)}
-         [icon {:style (:icon styles) :name "more-vert" :size 24}]]]])))
+      (let [show-popup-fn (fn [e]
+                            (.showPopupMenu rn/ui-manager (.findNodeHandle rn/ReactNative @ref-icon)
+                                            (clj->js (map :label actions))
+                                            (fn [] )
+                                            (fn [e i]
+                                              (when i ((:action (nth actions i)))))))]
+        [rn/view {:style {:flex 1
+                          :flex-direction "row"}}
+         ;; this empty view is a hack for showPopupmenu
+         ;; it adds the popup next to the tag, so we need an element before the
+         ;; icon.
+         [rn/view [rn/text {:ref (fn [ref] (reset! ref-icon ref))} ""]]
+         [header-icon-button "more-vert" {:on-press show-popup-fn}]]))))
 
 (defmulti scene #(keyword (aget % "scene" "route" "key")))
 
@@ -115,8 +113,6 @@
                                    :align-items "center"
                                    :justify-content "center"}
                 :button {:color (:text palette)
-                         :height 24
-                         :width 24
                          :margin 16}}
         root? (= scene-key "entries")
         icon-name (if root? "menu" "arrow-back")
@@ -124,19 +120,71 @@
     [rn/touchable-opacity {:style (:button-container styles) :on-press on-press}
      [icon {:style (:button styles) :name icon-name :size 24}]]))
 
-(defn nav-right-button [scene-props]
-  (when (= (aget scene-props "scene" "route" "key") "entry")
-    [entry-actions-button]))
+(defmulti nav-right-button #(keyword (aget % "scene" "route" "key")))
+(defmethod nav-right-button :entry [scene-props] [entry-actions-button])
+(defmethod nav-right-button :entries [scene-props]
+  (let [styles {:button {:padding-vertical 16
+                         :padding-horizontal 8}
+                :icon {:color (:text palette)}}]
+    [rn/touchable-opacity {:on-press #()}
+     [rn/view {:style (:button styles)}
+      [icon {:style (:icon styles) :name "search" :size 24}]]]))
+(defmethod nav-right-button :default [scene-props] nil)
 
-(defn header [scene-props]
-  (when-not (or (= (:key (:route (:scene scene-props))) "configure-server")
-                (= (:key (:route (:scene scene-props))) "success-configuration"))
+(defn header-default [scene-props]
+  [rn/navigation-header (assoc
+                         scene-props
+                         :style {:background-color (:primary palette)}
+                         :render-title-component #(r/as-element [nav-title %])
+                         :render-left-component #(r/as-element [nav-left-button %])
+                         :render-right-component #(r/as-element [nav-right-button %]))])
+
+(defn header-entries-searching [search-term scene-props]
+  (let [left-button [header-icon-button "arrow-back" {:style {:icon {:color (:grey600 colors)}}
+                                                      :on-press #(dispatch [:search/abort nil])}]
+        search-input [rn/text-input {:default-value search-term
+                                     :placeholder "Search"
+                                     :style {:font-size 18
+                                             :height 55
+                                             :color (:primary-text palette)}
+                                     :selection-color "white"
+                                     :underline-color-android "transparent"
+                                     :return-key-type "search"
+                                     :on-submit-editing (fn [e] (dispatch [:search/execute (.-text (.-nativeEvent e))]))
+                                     :auto-focus true}]
+        right-button [header-icon-button "close" {:style {:icon {:color (:grey600 colors)}}
+                                                  :on-press #(dispatch [:search/clear nil])}]]
+    [rn/navigation-header (assoc
+                           scene-props
+                           :style {:background-color (:grey200 colors)}
+                           :render-title-component #(r/as-element search-input)
+                           :render-left-component #(r/as-element left-button)
+                           :render-right-component #(r/as-element right-button))]))
+
+(defn header-entries-reading [scene-props]
+  (let [left-button [header-icon-button "menu" {:on-press #(dispatch [:drawer/open nil])}]
+        right-button [header-icon-button "search" {:on-press #(dispatch [:search/init nil])}]]
     [rn/navigation-header (assoc
                            scene-props
                            :style {:background-color (:primary palette)}
                            :render-title-component #(r/as-element [nav-title %])
-                           :render-left-component #(r/as-element [nav-left-button %])
-                           :render-right-component #(r/as-element [nav-right-button %]))]))
+                           :render-left-component #(r/as-element left-button)
+                           :render-right-component #(r/as-element right-button))]))
+
+(defn header-entries [scene-props]
+  (let [search-state (subscribe [:search/state])
+        styles {}]
+    (fn [scene-props]
+      (if (:searching? @search-state)
+        [header-entries-searching (or (:term @search-state)
+                                      (:default-term @search-state)) scene-props]
+        [header-entries-reading scene-props]))))
+
+(defmulti header #(keyword (:key (:route (:scene %)))))
+
+(defmethod header :configure-server [scene-props] nil)
+(defmethod header :entries [scene-props] [header-entries scene-props])
+(defmethod header :default [scene-props] [header-default scene-props])
 
 (defn app-root []
   (let [nav (subscribe [:nav/state])]

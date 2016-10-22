@@ -164,16 +164,19 @@
 (reg-event-fx
  :fetch-entries
  (fn [{db :db} _]
-   {:http-xhrio {:method :post
-                 :uri (str (:url (:server db)) "/elfeed/search?q=" "@15-days-old %2bunread")
-                 :format :text
-                 :response-format (ajax/json-response-format {:keywords? true})
-                 :keywords? true
-                 :on-success [:success-fetch-entries]
-                 :on-failure [:failure-fetch-entries]}
-    :db (assoc db
-               :error-entries false
-               :fetching-entries? true)}))
+   (let [query-term (js/encodeURIComponent
+                     (or (:term (:search db)) (:default-term (:search db))))
+         uri (str (:url (:server db)) "/elfeed/search?q=" query-term)]
+     {:http-xhrio {:method :post
+                   :uri uri
+                   :format :text
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :keywords? true
+                   :on-success [:success-fetch-entries]
+                   :on-failure [:failure-fetch-entries]}
+      :db (assoc db
+                 :error-entries false
+                 :fetching-entries? true)})))
 
 (reg-event-db
  :success-fetch-entries
@@ -330,3 +333,31 @@
  [debug]
  (fn [db [_ value]]
    (assoc db :connected? value)))
+
+(reg-event-db
+ :search/init
+ [check-spec]
+ (fn [db [_ _]]
+   (assoc-in db [:search :searching?] true)))
+
+(reg-event-db
+ :search/clear
+ [check-spec]
+ (fn [db [_ _]]
+   (assoc-in db [:search :term] "")))
+
+(reg-event-fx
+ :search/execute
+ [check-spec]
+ (fn [{db :db} [_ search-term]]
+   (let [term (if (empty? search-term) (:default-term (:search db)) search-term)]
+     {:dispatch [:fetch-entries]
+      :db (-> db
+              (assoc-in [:search :term] term)
+              (assoc-in [:search :searching?] false))})))
+
+(reg-event-db
+ :search/abort
+ [check-spec]
+ (fn [db [_ _]]
+   (assoc-in db [:search :searching?] false)))

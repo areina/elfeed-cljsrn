@@ -42,4 +42,5 @@
                       :ref nil}
              :update-time 0
              :server {:url nil :valid? nil :checking? nil}
+             :search {:searching? false :term nil :default-term "@15-days-old +unread"}
              :entries nil})

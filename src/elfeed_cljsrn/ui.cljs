@@ -35,3 +35,10 @@
     [rn/touchable {:on-press (:on-press props) :disabled (:disabled? props)}
      [rn/view {:style (:wrapper styles)}
       [rn/text {:style (:text styles)} label]]]))
+
+(defn header-icon-button [icon-name props]
+  (let [styles (merge-with merge {:button {:margin 16}
+                                  :icon {:color (:text palette)}} (:style props))]
+    [rn/touchable-opacity {:on-press (:on-press props)}
+     [rn/view {:style (:button styles)}
+      [icon {:style (:icon styles) :name icon-name :size 24}]]]))

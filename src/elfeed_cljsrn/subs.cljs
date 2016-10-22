@@ -51,3 +51,8 @@
  :nav/state
  (fn [db]
    (:nav db)))
+
+(reg-sub
+ :search/state
+ (fn [db]
+   (:search db)))
