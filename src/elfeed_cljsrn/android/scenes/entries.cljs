@@ -87,18 +87,13 @@
 (defn no-entries-component []
   (let [loading? (subscribe [:loading?])
         styles {:wrapper {:height 300
-                          :align-items "center"}
-                :button {:margin-top 10
-                         :border-radius 2
-                         :background-color (:secondary-text palette)
-                         :padding 10}
-                :button-text {:color (:white colors)}}]
+                          :align-items "center"}}]
     (fn []
       (let [label (if @loading? "LOADING..." "REFRESH")
             on-press-fn (if @loading? nil #(dispatch [:fetch-content]))]
         [rn/view {:style (:wrapper styles)}
-         [rn/text "There are no entries"]
-         [button {:on-press on-press-fn} label]]))))
+         [icon {:style {} :name "rss-feed" :size 84}]
+         [rn/text "There are no entries"]]))))
 
 (defn entries-scene []
   (let [loading (subscribe [:loading?])
