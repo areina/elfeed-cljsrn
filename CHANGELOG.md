@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This change
 - Add visual feedback pushing the refresh button when the entries list is empty
 
 ### Added
+- Add search text field
 - Splash screen
 
 ## [1.0.0] - 2016-09-21
