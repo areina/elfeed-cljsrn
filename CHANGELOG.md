@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This change
 - Validate url in configure scene
 
 ### Changed
+- Change the view when there are no entries to show
 - Add visual feedback pushing the refresh button when the entries list is empty
 
 ### Added
