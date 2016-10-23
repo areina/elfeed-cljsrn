@@ -4,11 +4,11 @@
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0-alpha11"]
-                 [org.clojure/clojurescript "1.9.225"]
+                 [org.clojure/clojurescript "1.9.229"]
                  [reagent "0.6.0" :exclusions [cljsjs/react cljsjs/react-dom cljsjs/react-dom-server]]
                  [re-frame "0.8.0"]
                  [day8.re-frame/async-flow-fx "0.0.6"]
-                 [day8.re-frame/http-fx "0.0.4"]]
+                 [day8.re-frame/http-fx "0.1.2"]]
   :plugins [[lein-cljsbuild "1.1.4"]]
   :clean-targets ["target/" "index.ios.js" "index.android.js"]
   :aliases {"prod-build" ^{:doc "Recompile code with prod profile."}
