@@ -7,6 +7,7 @@
 
     <style name="SplashTheme" parent="AppTheme">
         <item name="android:windowBackground">@drawable/splash_screen</item>
+        <item name="colorPrimaryDark">@color/teal700</item>
     </style>
 
 </resources>
