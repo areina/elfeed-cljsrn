@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file. This change
 
 ## [Unreleased]
 ### Fixed
+- Fix entry detail scene with occasional squashed words
 - Validate url in configure scene
 
 ### Changed
