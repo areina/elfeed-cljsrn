@@ -1,8 +1,8 @@
 (defproject elfeed-cljsrn "0.1.0-SNAPSHOT"
   :description "Elfeed mobile client built with clojurescript and react native"
   :url "http://github.com/areina/elfeed-cljsrn"
-  :license {:name "Eclipse Public License"
-            :url  "http://www.eclipse.org/legal/epl-v10.html"}
+  :license {:name "Apache License Version 2.0"
+            :url  "http://www.apache.org/licenses/LICENSE-2.0.html"}
   :dependencies [[org.clojure/clojure "1.9.0-alpha11"]
                  [org.clojure/clojurescript "1.9.229"]
                  [reagent "0.6.0" :exclusions [cljsjs/react cljsjs/react-dom cljsjs/react-dom-server]]
