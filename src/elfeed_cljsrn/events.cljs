@@ -244,9 +244,10 @@
  [->ls check-spec]
  (fn [db [_ entry response]]
    (dispatch [:mark-entry-as-read entry])
-   (-> db
-       (assoc :fetching-entry? false)
-       (assoc-in [:entries-m (:webid entry) :content-body] response))))
+   (let [clean-response (clojure.string/replace response "\n" " ")]
+     (-> db
+         (assoc :fetching-entry? false)
+         (assoc-in [:entries-m (:webid entry) :content-body] clean-response)))))
 
 (reg-event-db
  :failure-fetch-entry-content
