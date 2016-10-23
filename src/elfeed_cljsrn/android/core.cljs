@@ -11,6 +11,8 @@
             [elfeed-cljsrn.events]
             [elfeed-cljsrn.subs]))
 
+(def splash-screen (js/require "react-native-splash-screen"))
+
 (defn go-back! [navigation-state]
   (if (zero? (:index navigation-state))
     false
@@ -190,6 +192,7 @@
   (let [nav (subscribe [:nav/state])]
     (r/create-class
      {:component-did-mount (fn []
+                             (.hide splash-screen)
                              (listen-back-button! nav)
                              (check-connection)
                              (listen-connectivity))

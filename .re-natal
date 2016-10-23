@@ -8,7 +8,8 @@
     "prod": "env/prod"
   },
   "modules": [
-    "react-native-vector-icons/MaterialIcons"
+    "react-native-vector-icons/MaterialIcons",
+    "react-native-splash-screen"
   ],
   "imageDirs": [
     "images"
