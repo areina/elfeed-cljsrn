@@ -14,7 +14,7 @@
 (defn dec-to-zero
   "Same as dec if not zero"
   [arg]
-  (if (< 0 arg)
+  (if (pos? arg)
     (dec arg)
     arg))
 

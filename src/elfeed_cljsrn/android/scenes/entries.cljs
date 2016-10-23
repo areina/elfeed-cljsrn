@@ -90,7 +90,7 @@
                           :align-items "center"}}]
     (fn []
       (let [label (if @loading? "LOADING..." "REFRESH")
-            on-press-fn (if @loading? nil #(dispatch [:fetch-content]))]
+            on-press-fn (when-not @loading? #(dispatch [:fetch-content]))]
         [rn/view {:style (:wrapper styles)}
          [icon {:style {} :name "rss-feed" :size 84}]
          [rn/text "There are no entries"]]))))
