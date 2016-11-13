@@ -19,7 +19,7 @@
     arg))
 
 (defn valid-url? [url]
-  (clojure.string/starts-with? url "http://"))
+  (not (nil? (re-matches #"(https?://)(.*)" url))))
 
 ;; -- Interceptors -------------------------------------------------------------
 
