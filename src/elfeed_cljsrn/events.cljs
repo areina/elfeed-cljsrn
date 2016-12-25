@@ -292,9 +292,7 @@
 
 (reg-event-fx
  :open-entry-in-browser
- (fn [{db :db} _]
-   (let [url (:link (get (:entries-m db) (:current-entry db)))]
-     {:open-url url})))
+ (fn [{db :db} [_ entry]] {:open-url (:link entry)}))
 
 (reg-event-db
  :drawer/set

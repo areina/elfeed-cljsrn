@@ -75,13 +75,13 @@
         [icon {:style (:icon styles) :name "settings" :size 20}]
         [rn/text {:style (:value styles)} "Settings" ]]]]]))
 
-(defn entry-actions-button []
+(defn entry-actions-button [entry]
   (let [ref-icon (r/atom nil)
         styles {:button {:padding-vertical 16
                          :padding-horizontal 8}
                 :icon {:color (:text palette)}}
         actions [{:label "Open in browser"
-                  :action (fn [] (dispatch [:open-entry-in-browser]))}]]
+                  :action (fn [] (dispatch [:open-entry-in-browser entry]))}]]
     (fn []
       (let [show-popup-fn (fn [e]
                             (.showPopupMenu rn/ui-manager (.findNodeHandle rn/ReactNative @ref-icon)
@@ -182,10 +182,22 @@
                                       (:default-term @search-state)) scene-props]
         [header-entries-reading scene-props]))))
 
+(defn header-entry [scene-props]
+  (let [current-entry (subscribe [:current-entry])]
+    (fn [scene-props]
+      [rn/navigation-header
+       (assoc
+        scene-props
+        :style {:background-color (:primary palette)}
+        :render-title-component #(r/as-element [nav-title %])
+        :render-left-component #(r/as-element [nav-left-button %])
+        :render-right-component #(r/as-element [entry-actions-button @current-entry]))])))
+
 (defmulti header #(keyword (:key (:route (:scene %)))))
 
 (defmethod header :configure-server [scene-props] nil)
 (defmethod header :entries [scene-props] [header-entries scene-props])
+(defmethod header :entry [scene-props]   [header-entry scene-props])
 (defmethod header :default [scene-props] [header-default scene-props])
 
 (defn app-root []
