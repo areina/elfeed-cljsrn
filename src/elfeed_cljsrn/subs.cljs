@@ -7,11 +7,6 @@
    (map (fn [entry-id] (get (:entry/by-id db) entry-id)) (:entries db))))
 
 (reg-sub
- :recent-reads
- (fn [db _]
-   (:recent-reads db)))
-
-(reg-sub
  :loading?
  (fn [db]
    (:fetching-entries? db)))

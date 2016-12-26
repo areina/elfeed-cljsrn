@@ -22,8 +22,9 @@
    [rn/text "Network error. Check your wifi or your elfeed server."]])
 
 (defn entry-row [entry]
-  (let [styles {:list-wrapper {:flex-direction "row"
-                               :background-color (if (:unread? entry) (:white colors) (:grey100 colors))
+  (let [unread? (boolean (some #{"unread"} (:tags entry)))
+        styles {:list-wrapper {:flex-direction "row"
+                               :background-color (if unread? (:white colors) (:grey100 colors))
                                :padding-left 16
                                :padding-right 16
                                :height 72
@@ -100,7 +101,6 @@
         update-time (subscribe [:update-time])
         remote-error (subscribe [:remote-error :entries])
         entries (subscribe [:entries])
-        recent-reads (subscribe [:recent-reads])
         styles {:wrapper {:flex 1}
                 :list {:margin-top 0
                        :padding-bottom 0}
@@ -110,8 +110,7 @@
       (let [datasource (.cloneWithRowsAndSections
                         (rn/ReactNative.SwipeableListView.getNewDataSource.)
                         (clj->js {:s1 (or @entries '())})
-                        (clj->js '("s1")))
-            hack @recent-reads]
+                        (clj->js '("s1")))]
         [rn/view {:style (:wrapper styles)}
          [rn/view {:style {:flex 1}}
           (when @remote-error
@@ -126,13 +125,10 @@
                                    :render-header (fn [_ _]
                                                     (when (> @update-time 0)
                                                       (r/as-element [update-time-info @update-time])))
-                                   :render-quick-actions (fn [row-data section-id row-id]
+                                   :render-quick-actions (fn [row-data _section-id _row-id]
                                                            (r/as-element [entry-quick-actions (js->clj row-data :keywordize-keys true)]))
-                                   :render-row (fn [data section-id row-id]
-                                                 (let [entry-data (js->clj data :keywordize-keys true)
-                                                       unread? (and (boolean (some #{"unread"} (:tags entry-data)))
-                                                                    (not (boolean (some #{(:webid entry-data)} @recent-reads))))]
-                                                   (r/as-element [entry-row (merge  entry-data {:unread? unread?})])))
+                                   :render-row (fn [data _section-id _row-id]
+                                                 (r/as-element [entry-row (js->clj data :keywordize-keys true)]))
                                    :render-separator (fn [section-id row-id _]
                                                        (r/as-element [rn/view {:key (str section-id "-" row-id)
                                                                                :style (:separator styles)}]))}]
