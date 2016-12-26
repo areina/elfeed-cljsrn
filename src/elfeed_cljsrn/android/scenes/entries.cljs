@@ -81,7 +81,7 @@
                           :padding-right 14}
                 :icon {:color (:dark-primary palette)}}]
     [rn/view {:style (:wrapper styles)}
-     [rn/touchable {:on-press #(dispatch [:mark-entry-as-read entry])}
+     [rn/touchable {:on-press #(dispatch [:mark-entries-as-read (list (:webid entry))])}
       [rn/view {}
        [icon {:style (:icon styles) :name "archive" :size 22}]]]]))
 

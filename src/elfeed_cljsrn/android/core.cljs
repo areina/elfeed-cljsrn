@@ -93,7 +93,7 @@
                           :flex-direction "row"}}
          [header-icon-button "markunread" {:on-press
                                            (fn [_]
-                                             (dispatch [:mark-entry-as-unread entry])
+                                             (dispatch [:mark-entries-as-unread (list (:webid entry))])
                                              (navigate-back))}]
          ;; this empty view is a hack for showPopupmenu
          ;; it adds the popup next to the tag, so we need an element before the

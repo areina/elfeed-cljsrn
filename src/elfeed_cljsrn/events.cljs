@@ -204,54 +204,63 @@
        (assoc :error-entries error))))
 
 (reg-event-fx
- :mark-entry-as-unread
+ :mark-entries-as-unread
  [check-spec]
- (fn [{db :db} [_ entry]]
+ (fn [{db :db} [_ ids]]
    {:http-xhrio {:method :put
                  :uri (str (:url (:server db)) "/elfeed/tags")
-                 :params {:entries (list (:webid entry)) :add (list "unread")}
+                 :params {:entries ids :add (list "unread")}
                  :format (ajax/json-request-format)
                  :response-format (ajax/json-response-format)
-                 :on-success [:success-mark-entry-as-unread]
-                 :on-failure [:failure-mark-entry-as-unread]}
-    :db (update-in db [:entry/by-id (:webid entry) :tags] conj "unread")}))
+                 :on-success [:success-mark-entries-as-unread ids]
+                 :on-failure [:failure-mark-entries-as-unread ids]}
+    :db db}))
 
 (reg-event-db
- :success-mark-entry-as-unread
+ :success-mark-entries-as-unread
  [check-spec]
- (fn [db [_ response]]
-   db))
+ (fn [db [_ ids response]]
+   (update db :entry/by-id (fn [entries]
+                             (reduce
+                              (fn [acc id]
+                                (update-in acc [id] (fn [entry]
+                                                      (update entry :tags conj "unread")))
+                                ) entries ids)))))
 
 (reg-event-db
- :failure-mark-entry-as-unread
+ :failure-mark-entries-as-unread
  [check-spec]
- (fn [db [_ error]]
+ (fn [db [_ ids error]]
    db))
 
 (reg-event-fx
- :mark-entry-as-read
+ :mark-entries-as-read
  [check-spec]
- (fn [{db :db} [_ entry]]
+ (fn [{db :db} [_ ids]]
    {:http-xhrio {:method :put
                  :uri (str (:url (:server db)) "/elfeed/tags")
-                 :params {:entries (list (:webid entry)) :remove (list "unread")}
+                 :params {:entries ids :remove (list "unread")}
                  :format (ajax/json-request-format)
                  :response-format (ajax/json-response-format)
-                 :on-success [:success-mark-entry-as-read]
-                 :on-failure [:failure-mark-entry-as-read]}
-    :db (update-in db [:entry/by-id (:webid entry) :tags]
-                   (fn [tags] (remove (fn [tag] (= "unread" tag)) tags)))}))
+                 :on-success [:success-mark-entries-as-read ids]
+                 :on-failure [:failure-mark-entries-as-read ids]}
+    :db db}))
 
 (reg-event-db
- :success-mark-entry-as-read
+ :success-mark-entries-as-read
  [check-spec]
- (fn [db [_ response]]
-   db))
+ (fn [db [_ ids response]]
+   (update db :entry/by-id
+           (fn [entries]
+             (reduce (fn [acc id]
+                       (update-in acc [id]
+                                  (fn [entry]
+                                    (update entry :tags (fn [tags] (remove (fn [tag] (= "unread" tag)) tags)))))) entries ids)))))
 
 (reg-event-db
- :failure-mark-entry-as-read
+ :failure-mark-entries-as-read
  [check-spec]
- (fn [db [_ error]]
+ (fn [db [_ ids error]]
    db))
 
 (reg-event-fx
@@ -273,7 +282,7 @@
  :success-fetch-entry-content
  [->ls check-spec]
  (fn [db [_ entry response]]
-   (dispatch [:mark-entry-as-read entry])
+   (dispatch [:mark-entries-as-read (list (:webid entry))])
    (let [clean-response (clojure.string/replace response "\n" " ")]
      (-> db
          (assoc :fetching-entry? false)
