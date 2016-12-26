@@ -28,7 +28,7 @@ fit very well for iOS development, will see.
 
 ## Screenshots
 
-![](https://raw.github.com/areina/elfeed-cljsrn/master/doc/screenshots/elfeed-cljsrn.png)
+![](https://raw.github.com/areina/elfeed-cljsrn/master/doc/images/screenshots/elfeed-cljsrn.png)
 
 ## Development
 
