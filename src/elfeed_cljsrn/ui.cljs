@@ -37,7 +37,8 @@
       [rn/text {:style (:text styles)} label]]]))
 
 (defn header-icon-button [icon-name props]
-  (let [styles (merge-with merge {:button {:margin 16}
+  (let [styles (merge-with merge {:button {:margin-vertical 16
+                                           :margin-horizontal 12}
                                   :icon {:color (:text palette)}} (:style props))]
     [rn/touchable-opacity {:on-press (:on-press props)}
      [rn/view {:style (:button styles)}
