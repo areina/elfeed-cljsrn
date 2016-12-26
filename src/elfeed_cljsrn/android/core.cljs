@@ -156,13 +156,36 @@
                            :render-left-component #(r/as-element left-button)
                            :render-right-component #(r/as-element right-button))]))
 
+(defn header-entries-with-actions [scene-props selected-entries]
+  (let [left-button [header-icon-button "arrow-back" {:style {:button {:margin-left 16}}
+                                                      :on-press #(dispatch [:clear-selected-entries])}]
+        title [rn/navigation-header-title
+               {:text-style {:color (:text palette)}}
+               (str (count selected-entries))]
+        right-button (if (:unread? (last selected-entries))
+                       [header-icon-button "drafts" {:on-press (fn [_]
+                                                                 (dispatch [:mark-entries-as-read (map :webid selected-entries)])
+                                                                 (dispatch [:clear-selected-entries]))}]
+                       [header-icon-button "markunread" {:on-press (fn [_]
+                                                                     (dispatch [:mark-entries-as-unread (map :webid selected-entries)])
+                                                                     (dispatch [:clear-selected-entries]))}])]
+    [rn/navigation-header (assoc
+                           scene-props
+                           :style {:background-color (:secondary-text palette)}
+                           :render-title-component #(r/as-element title)
+                           :render-left-component #(r/as-element left-button)
+                           :render-right-component #(r/as-element right-button))]))
+
 (defn header-entries [scene-props]
-  (let [search-state (subscribe [:search/state])]
+  (let [search-state (subscribe [:search/state])
+        selected-entries (subscribe [:selected-entries])]
     (fn [scene-props]
       (if (:searching? @search-state)
         [header-entries-searching (or (:term @search-state)
                                       (:default-term @search-state)) scene-props]
-        [header-entries-reading scene-props]))))
+        (if (empty? @selected-entries)
+          [header-entries-reading scene-props]
+          [header-entries-with-actions scene-props @selected-entries])))))
 
 (defn header-entry [scene-props]
   (let [current-entry (subscribe [:current-entry])

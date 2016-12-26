@@ -22,9 +22,11 @@
    [rn/text "Network error. Check your wifi or your elfeed server."]])
 
 (defn entry-row [entry]
-  (let [unread? (boolean (some #{"unread"} (:tags entry)))
-        styles {:list-wrapper {:flex-direction "row"
-                               :background-color (if unread? (:white colors) (:grey100 colors))
+  (let [styles {:list-wrapper {:flex-direction "row"
+                               :background-color (if (:selected? entry) "#d4d4d4"
+                                                     (if (:unread? entry)
+                                                       (:white colors)
+                                                       (:grey100 colors)))
                                :padding-left 16
                                :padding-right 16
                                :height 72
@@ -46,6 +48,8 @@
                                  :color "rgba(0,0,0,.54)"}}]
     [rn/touchable {:key (:webid entry)
                    :underlay-color (:grey-100 colors)
+                   :on-long-press (fn [_]
+                                    (dispatch [:toggle-select-entry entry]))
                    :on-press (fn [_]
                                (dispatch [:fetch-entry-content entry])
                                (navigate-to :entry))}

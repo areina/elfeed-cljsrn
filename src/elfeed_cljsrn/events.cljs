@@ -203,6 +203,20 @@
        (assoc :fetching-entries? false)
        (assoc :error-entries error))))
 
+(reg-event-db
+ :toggle-select-entry
+ [check-spec]
+ (fn [db [_ entry]]
+   (if (some #{(:webid entry)} (:selected-entries db))
+     (update db :selected-entries (fn [ids] (remove (fn [id] (= (:webid entry) id)) ids)))
+     (update db :selected-entries conj (:webid entry)))))
+
+(reg-event-db
+ :clear-selected-entries
+ [check-spec]
+ (fn [db [_ _]]
+   (assoc db :selected-entries nil)))
+
 (reg-event-fx
  :mark-entries-as-unread
  [check-spec]
