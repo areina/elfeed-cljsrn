@@ -149,8 +149,8 @@
  ->ls
  (fn [db _]
    (let [route (if (:valid? (:server db))
-                 {:key :entries :title "All entries"}
-                 {:key :configure-server :title "Configure your Elfeed server"})]
+                 (:entries routes)
+                 (:configure-server routes))]
      (assoc db :nav {:index 0 :routes [route]}))))
 
 (reg-event-fx
