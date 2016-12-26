@@ -26,7 +26,7 @@
                         :opt-un [:server/error-message]))
 
 (s/def ::entry map?)
-(s/def ::entries (s/* ::entry))
+(s/def ::entries (s/* string?))
 
 (s/def ::current-entry string?)
 

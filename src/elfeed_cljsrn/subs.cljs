@@ -4,7 +4,7 @@
 (reg-sub
  :entries
  (fn [db _]
-   (:entries db)))
+   (map (fn [entry-id] (get (:entry/by-id db) entry-id)) (:entries db))))
 
 (reg-sub
  :recent-reads
@@ -25,7 +25,7 @@
  :current-entry
  (fn [db]
    (let [id (:current-entry db)]
-     (get (:entries-m db) id))))
+     (get (:entry/by-id db) id))))
 
 (reg-sub
  :server

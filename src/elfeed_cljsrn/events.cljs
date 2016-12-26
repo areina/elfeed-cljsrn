@@ -35,7 +35,11 @@
     (after (partial check-and-throw ::db/app-db))
     []))
 
-(def ->ls (after (fn [db] (ls/save (select-keys db '(:entries :nav :server :update-time))))))
+(def ->ls
+  (after
+   (fn [db]
+     (let [keys-to-store '(:entry/by-id :entries :nav :server :update-time)]
+       (ls/save (select-keys db keys-to-store))))))
 
 ;; -- Effect Handlers ----------------------------------------------------------
 
@@ -184,9 +188,13 @@
  (fn [db [_ response]]
    (-> db
        (assoc :fetching-entries? false)
-       ;; TODO check if we can do this in a different way. SwipeableListView
-       ;; needs a collection of elements with id attribute
-       (assoc :entries (map (fn [x] (merge {:id (:webid x)} x)) response)))))
+       ;; RN/SwipeableListView needs a collection of elements with id attribute
+       (assoc :entry/by-id (reduce (fn [acc item]
+                                     (let [id (:webid item)]
+                                       (merge acc {id (assoc item :id id)})))
+                                   {}
+                                   response))
+       (assoc :entries (map :webid response)))))
 
 (reg-event-db
  :failure-fetch-entries
@@ -194,6 +202,31 @@
    (-> db
        (assoc :fetching-entries? false)
        (assoc :error-entries error))))
+
+(reg-event-fx
+ :mark-entry-as-unread
+ [check-spec]
+ (fn [{db :db} [_ entry]]
+   {:http-xhrio {:method :put
+                 :uri (str (:url (:server db)) "/elfeed/tags")
+                 :params {:entries (list (:webid entry)) :add (list "unread")}
+                 :format (ajax/json-request-format)
+                 :response-format (ajax/json-response-format)
+                 :on-success [:success-mark-entry-as-unread]
+                 :on-failure [:failure-mark-entry-as-unread]}
+    :db (update-in db [:entry/by-id (:webid entry) :tags] conj "unread")}))
+
+(reg-event-db
+ :success-mark-entry-as-unread
+ [check-spec]
+ (fn [db [_ response]]
+   db))
+
+(reg-event-db
+ :failure-mark-entry-as-unread
+ [check-spec]
+ (fn [db [_ error]]
+   db))
 
 (reg-event-fx
  :mark-entry-as-read
@@ -206,10 +239,8 @@
                  :response-format (ajax/json-response-format)
                  :on-success [:success-mark-entry-as-read]
                  :on-failure [:failure-mark-entry-as-read]}
-    :db (update db :recent-reads (fn [coll]
-                                   (if coll
-                                     (conj coll (:webid entry))
-                                     #{(:webid entry)})))}))
+    :db (update-in db [:entry/by-id (:webid entry) :tags]
+                   (fn [tags] (remove (fn [tag] (= "unread" tag)) tags)))}))
 
 (reg-event-db
  :success-mark-entry-as-read
@@ -236,8 +267,7 @@
     :db (-> db
             (assoc :error-entry false
                    :current-entry (:webid entry)
-                   :fetching-entry? true)
-            (assoc-in [:entries-m (:webid entry)] entry))}))
+                   :fetching-entry? true))}))
 
 (reg-event-db
  :success-fetch-entry-content
@@ -247,7 +277,7 @@
    (let [clean-response (clojure.string/replace response "\n" " ")]
      (-> db
          (assoc :fetching-entry? false)
-         (assoc-in [:entries-m (:webid entry) :content-body] clean-response)))))
+         (assoc-in [:entry/by-id (:webid entry) :content-body] clean-response)))))
 
 (reg-event-db
  :failure-fetch-entry-content

@@ -91,6 +91,10 @@
                                               (when i ((:action (nth actions i)))))))]
         [rn/view {:style {:flex 1
                           :flex-direction "row"}}
+         [header-icon-button "markunread" {:on-press
+                                           (fn [_]
+                                             (dispatch [:mark-entry-as-unread entry])
+                                             (navigate-back))}]
          ;; this empty view is a hack for showPopupmenu
          ;; it adds the popup next to the tag, so we need an element before the
          ;; icon.
@@ -108,38 +112,14 @@
   (let [title (aget scene-props "scene" "route" "title")]
     [rn/navigation-header-title {:text-style {:color (:text palette)}} title]))
 
-(defn nav-left-button [scene-props]
-  (let [scene-key (aget scene-props "scene" "route" "key")
-        styles {:button-container {:flex 1
-                                   :flex-direction "row"
-                                   :align-items "center"
-                                   :justify-content "center"}
-                :button {:color (:text palette)
-                         :margin 16}}
-        root? (= scene-key "entries")
-        icon-name (if root? "menu" "arrow-back")
-        on-press (if root? #(dispatch [:drawer/open nil]) #(navigate-back))]
-    [rn/touchable-opacity {:style (:button-container styles) :on-press on-press}
-     [icon {:style (:button styles) :name icon-name :size 24}]]))
-
-(defmulti nav-right-button #(keyword (aget % "scene" "route" "key")))
-(defmethod nav-right-button :entry [scene-props] [entry-actions-button])
-(defmethod nav-right-button :entries [scene-props]
-  (let [styles {:button {:padding-vertical 16
-                         :padding-horizontal 8}
-                :icon {:color (:text palette)}}]
-    [rn/touchable-opacity {:on-press #()}
-     [rn/view {:style (:button styles)}
-      [icon {:style (:icon styles) :name "search" :size 24}]]]))
-(defmethod nav-right-button :default [scene-props] nil)
-
-(defn header-default [scene-props]
-  [rn/navigation-header (assoc
-                         scene-props
-                         :style {:background-color (:primary palette)}
-                         :render-title-component #(r/as-element [nav-title %])
-                         :render-left-component #(r/as-element [nav-left-button %])
-                         :render-right-component #(r/as-element [nav-right-button %]))])
+(defn header-settings [scene-props]
+  (let [left-button [header-icon-button "arrow-back" {:style {:button {:margin-left 16}}
+                                                      :on-press #(navigate-back)}]]
+    [rn/navigation-header (assoc
+                           scene-props
+                           :style {:background-color (:primary palette)}
+                           :render-title-component #(r/as-element [nav-title %])
+                           :render-left-component #(r/as-element left-button))]))
 
 (defn header-entries-searching [search-term scene-props]
   (let [left-button [header-icon-button "arrow-back" {:style {:icon {:color (:grey600 colors)}}
@@ -154,7 +134,8 @@
                                      :return-key-type "search"
                                      :on-submit-editing (fn [e] (dispatch [:search/execute (.-text (.-nativeEvent e))]))
                                      :auto-focus true}]
-        right-button [header-icon-button "close" {:style {:icon {:color (:grey600 colors)}}
+        right-button [header-icon-button "close" {:style {:button {:margin-right 16}
+                                                          :icon {:color (:grey600 colors)}}
                                                   :on-press #(dispatch [:search/clear nil])}]]
     [rn/navigation-header (assoc
                            scene-props
@@ -164,8 +145,10 @@
                            :render-right-component #(r/as-element right-button))]))
 
 (defn header-entries-reading [scene-props]
-  (let [left-button [header-icon-button "menu" {:on-press #(dispatch [:drawer/open nil])}]
-        right-button [header-icon-button "search" {:on-press #(dispatch [:search/init nil])}]]
+  (let [left-button [header-icon-button "menu" {:style {:button {:margin-left 16}}
+                                                :on-press #(dispatch [:drawer/open nil])}]
+        right-button [header-icon-button "search" {:style {:button {:margin-right 16}}
+                                                   :on-press #(dispatch [:search/init nil])}]]
     [rn/navigation-header (assoc
                            scene-props
                            :style {:background-color (:primary palette)}
@@ -174,8 +157,7 @@
                            :render-right-component #(r/as-element right-button))]))
 
 (defn header-entries [scene-props]
-  (let [search-state (subscribe [:search/state])
-        styles {}]
+  (let [search-state (subscribe [:search/state])]
     (fn [scene-props]
       (if (:searching? @search-state)
         [header-entries-searching (or (:term @search-state)
@@ -183,22 +165,24 @@
         [header-entries-reading scene-props]))))
 
 (defn header-entry [scene-props]
-  (let [current-entry (subscribe [:current-entry])]
+  (let [current-entry (subscribe [:current-entry])
+        left-button [header-icon-button "arrow-back" {:style {:button {:margin-left 16}}
+                                                      :on-press #(navigate-back)}]]
     (fn [scene-props]
       [rn/navigation-header
        (assoc
         scene-props
         :style {:background-color (:primary palette)}
         :render-title-component #(r/as-element [nav-title %])
-        :render-left-component #(r/as-element [nav-left-button %])
+        :render-left-component #(r/as-element left-button)
         :render-right-component #(r/as-element [entry-actions-button @current-entry]))])))
 
 (defmulti header #(keyword (:key (:route (:scene %)))))
 
 (defmethod header :configure-server [scene-props] nil)
-(defmethod header :entries [scene-props] [header-entries scene-props])
-(defmethod header :entry [scene-props]   [header-entry scene-props])
-(defmethod header :default [scene-props] [header-default scene-props])
+(defmethod header :entries          [scene-props] [header-entries scene-props])
+(defmethod header :entry            [scene-props] [header-entry scene-props])
+(defmethod header :settings         [scene-props] [header-settings scene-props])
 
 (defn app-root []
   (let [nav (subscribe [:nav/state])]
