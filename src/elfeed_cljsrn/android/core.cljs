@@ -50,8 +50,7 @@
                 :header {:background-color (:primary palette)
                          :height 120
                          :margin-bottom 8 }
-                :item {:flex 1
-                       :flex-direction "row"
+                :item {:flex-direction "row"
                        :align-items "center"
                        :height 48
                        :padding-left 16}
@@ -59,8 +58,7 @@
                 :value {:font-size 14
                         :color (:primary-text palette)
                         :margin-left 28}}]
-    [rn/view {:style {:flex 1
-                      :background-color (:white colors)}}
+    [rn/view {:style {:background-color (:white colors)}}
      [rn/view {:style (:header styles)}]
      [rn/view {:style {:margin-top 8}}
       [rn/touchable {:on-press (fn []
@@ -89,8 +87,7 @@
                                             (fn [] )
                                             (fn [e i]
                                               (when i ((:action (nth actions i)))))))]
-        [rn/view {:style {:flex 1
-                          :flex-direction "row"}}
+        [rn/view {:style {:flex-direction "row"}}
          [header-icon-button "markunread" {:on-press
                                            (fn [_]
                                              (dispatch [:mark-entries-as-unread (list (:webid entry))])

@@ -32,8 +32,7 @@
                          :padding-horizontal 10
                          :border-bottom-color (:divider palette)
                          :border-bottom-width 1}
-                :feed-info {:flex 1
-                            :flex-direction "row"}
+                :feed-info {:flex-direction "row"}
                 :loading-content {:flex 1
                                   :padding-left 10
                                   :justify-content "center"

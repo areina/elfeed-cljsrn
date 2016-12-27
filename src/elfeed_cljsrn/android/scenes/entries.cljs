@@ -80,9 +80,7 @@
 (defn entry-quick-actions [entry]
   (let [styles {:wrapper {:flex 1
                           :flex-direction "row"
-                          :justify-content "flex-end"
-                          :align-items "center"
-                          :padding-right 14}
+                          :justify-content "flex-end"}
                 :icon {:color (:dark-primary palette)}}]
     [rn/view {:style (:wrapper styles)}
      [rn/touchable {:on-press #(dispatch [:mark-entries-as-read (list (:webid entry))])}
@@ -116,25 +114,24 @@
                         (clj->js {:s1 (or @entries '())})
                         (clj->js '("s1")))]
         [rn/view {:style (:wrapper styles)}
-         [rn/view {:style {:flex 1}}
-          (when @remote-error
-            [remote-error-message])
-          [rn/swipeable-list-view {:dataSource datasource
-                                   :max-swipe-distance 50
-                                   :bounceFirstRowOnMount false
-                                   :refresh-control (r/as-element [rn/refresh-control {:refreshing @loading
-                                                                                       :on-refresh #(dispatch [:fetch-content])}])
-                                   :style (:list styles)
-                                   :enableEmptySections true
-                                   :render-header (fn [_ _]
-                                                    (when (> @update-time 0)
-                                                      (r/as-element [update-time-info @update-time])))
-                                   :render-quick-actions (fn [row-data _section-id _row-id]
-                                                           (r/as-element [entry-quick-actions (js->clj row-data :keywordize-keys true)]))
-                                   :render-row (fn [data _section-id _row-id]
-                                                 (r/as-element [entry-row (js->clj data :keywordize-keys true)]))
-                                   :render-separator (fn [section-id row-id _]
-                                                       (r/as-element [rn/view {:key (str section-id "-" row-id)
-                                                                               :style (:separator styles)}]))}]
-          (when (empty? @entries)
-            [no-entries-component])]]))))
+         (when @remote-error
+           [remote-error-message])
+         [rn/swipeable-list-view {:dataSource datasource
+                                  :max-swipe-distance 50
+                                  :bounceFirstRowOnMount false
+                                  :refresh-control (r/as-element [rn/refresh-control {:refreshing @loading
+                                                                                      :on-refresh #(dispatch [:fetch-content])}])
+                                  :style (:list styles)
+                                  :enableEmptySections true
+                                  :render-header (fn [_ _]
+                                                   (when (> @update-time 0)
+                                                     (r/as-element [update-time-info @update-time])))
+                                  ;; :render-quick-actions (fn [row-data _section-id _row-id]
+                                  ;;                         (r/as-element [entry-quick-actions (js->clj row-data :keywordize-keys true)]))
+                                  :render-row (fn [data _section-id _row-id]
+                                                (r/as-element [entry-row (js->clj data :keywordize-keys true)]))
+                                  :render-separator (fn [section-id row-id _]
+                                                      (r/as-element [rn/view {:key (str section-id "-" row-id)
+                                                                              :style (:separator styles)}]))}]
+         (when (empty? @entries)
+           [no-entries-component])]))))
