@@ -1,14 +1,25 @@
 {
-  "name": "ElfeedCljsrn",
-  "version": "1.1.1",
-  "private": true,
-  "scripts": {
-    "start": "node_modules/react-native/packager/packager.sh --nonPersistent"
-  },
-  "dependencies": {
-    "react": "15.3.0",
-    "react-native": "0.32.0",
-    "react-native-splash-screen": "^1.0.9",
-    "react-native-vector-icons": "^2.0.3"
-  }
+	"name": "ElfeedCljsrn",
+	"version": "1.1.1",
+	"private": true,
+	"scripts": {
+		"start": "node_modules/react-native/packager/packager.sh --nonPersistent",
+		"test": "jest"
+	},
+	"dependencies": {
+		"babel-plugin-transform-es2015-block-scoping": "6.15.0",
+		"react": "15.4.1",
+	        "react-native": "0.39.2",
+	        "react-native-splash-screen": "^1.0.9",
+                "react-native-vector-icons": "^2.0.3"
+	},
+	"devDependencies": {
+		"babel-jest": "18.0.0",
+		"babel-preset-react-native": "1.9.1",
+		"jest": "18.0.0",
+		"react-test-renderer": "15.4.1"
+	},
+	"jest": {
+		"preset": "react-native"
+	}
 }
