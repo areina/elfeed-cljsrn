@@ -88,15 +88,11 @@
        [icon {:style (:icon styles) :name "archive" :size 22}]]]]))
 
 (defn no-entries-component []
-  (let [loading? (subscribe [:loading?])
-        styles {:wrapper {:height 300
+  (let [styles {:wrapper {:height 300
                           :align-items "center"}}]
-    (fn []
-      (let [label (if @loading? "LOADING..." "REFRESH")
-            on-press-fn (when-not @loading? #(dispatch [:fetch-content]))]
-        [rn/view {:style (:wrapper styles)}
-         [icon {:style {} :name "rss-feed" :size 84}]
-         [rn/text "There are no entries"]]))))
+    [rn/view {:style (:wrapper styles)}
+     [icon {:style {} :name "rss-feed" :size 84}]
+     [rn/text "There are no entries"]]))
 
 (defn entries-scene []
   (let [loading (subscribe [:loading?])
