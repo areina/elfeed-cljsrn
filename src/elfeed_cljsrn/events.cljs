@@ -218,6 +218,13 @@
    (assoc db :selected-entries nil)))
 
 (reg-event-fx
+ :press-entry-row
+ (fn [{db :db} [_ entry]]
+   (if (empty? (:selected-entries db))
+     {:dispatch-n (list [:fetch-entry-content entry] [:nav/push (:entry routes)])}
+     {:dispatch [:toggle-select-entry entry]})))
+
+(reg-event-fx
  :mark-entries-as-unread
  [check-spec]
  (fn [{db :db} [_ ids]]

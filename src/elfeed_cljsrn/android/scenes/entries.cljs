@@ -51,8 +51,7 @@
                    :on-long-press (fn [_]
                                     (dispatch [:toggle-select-entry entry]))
                    :on-press (fn [_]
-                               (dispatch [:fetch-entry-content entry])
-                               (navigate-to :entry))}
+                               (dispatch [:press-entry-row entry]))}
      [rn/view {:style (:list-wrapper styles)}
       [rn/view {:style {:flex 1
                         :justify-content "center"}}
