@@ -2,8 +2,10 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
-
-Nothing.
+### Changed
+- Update ReactNative version to v0.39.2
+- Update project clojure/script dependencies
+- Update IP in dev environment to work properly with Figwheel and Genymotion emulator
 
 ## [1.1.1] - 2016-11-13
 ### Fixed
