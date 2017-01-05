@@ -90,14 +90,14 @@ def enableProguardInReleaseBuilds = false
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.1"
+    buildToolsVersion "25.0.1"
 
     defaultConfig {
         applicationId "com.elfeedcljsrn"
         minSdkVersion 16
         targetSdkVersion 22
-        versionCode 3
-        versionName "1.1.1"
+        versionCode 4
+        versionName "1.2.0"
         ndk {
             abiFilters "armeabi-v7a", "x86"
         }
