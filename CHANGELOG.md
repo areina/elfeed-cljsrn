@@ -3,9 +3,20 @@ All notable changes to this project will be documented in this file. This change
 
 ## [Unreleased]
 ### Changed
+- Clean unnecessary code
+- Simplify layout code
+- Disable temporarily "swipeable action (mark as read/unread)" for entries due
+  to a bug in RN
+- Fix layout issues related to the upgrade of RN v0.39
+- Update `open-entry-browser` fn to be pure
 - Update ReactNative version to v0.39.2
 - Update project clojure/script dependencies
 - Update IP in dev environment to work properly with Figwheel and Genymotion emulator
+
+### Added
+- Add action to mark entry as unread in entry scene
+- Add the possibility to select multiple entries and mark them as read/unread in
+  entries scene
 
 ## [1.1.1] - 2016-11-13
 ### Fixed
