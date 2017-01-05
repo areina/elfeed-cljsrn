@@ -22,30 +22,26 @@
    [rn/text "Network error. Check your wifi or your elfeed server."]])
 
 (defn entry-row [entry]
-  (let [styles {:list-wrapper {:flex-direction "row"
-                               :background-color (if (:selected? entry) "#d4d4d4"
+  (let [styles {:list-wrapper {:background-color (if (:selected? entry) "#d4d4d4"
                                                      (if (:unread? entry)
                                                        (:white colors)
                                                        (:grey100 colors)))
-                               :padding-left 16
-                               :padding-right 16
+                               :padding-horizontal 16
                                :height 72
-                               :align-items "center"}
-                :first-line {:flex-direction "row"}
-                :primary-text-wrapper {:flex 1
-                                       :padding-right 16}
-                :primary-text {:font-size 16
-                               :font-weight "400"
-                               :line-height 24}
-                :caption-text-wrapper {:align-self "flex-start"
-                                       :align-items "flex-start"}
-                :caption-text {:font-size 12
-                               :font-weight "400"
-                               :line-height 20}
-                :secondary-text-wrapper {}
-                :secondary-text {:line-height 22
-                                 :font-size 14
-                                 :color "rgba(0,0,0,.54)"}}]
+                               :justify-content "center"}
+                :first-line {:flex-direction "row"
+                             :justify-content "space-between"}
+                :title {:flex-shrink 1
+                        :padding-right 16
+                        :font-size 16
+                        :font-weight "400"
+                        :line-height 24}
+                :date {:font-size 12
+                       :font-weight "400"
+                       :line-height 20}
+                :feed {:line-height 22
+                       :font-size 14
+                       :color "rgba(0,0,0,.54)"}}]
     [rn/touchable {:key (:webid entry)
                    :underlay-color (:grey-100 colors)
                    :on-long-press (fn [_]
@@ -53,17 +49,10 @@
                    :on-press (fn [_]
                                (dispatch [:press-entry-row entry]))}
      [rn/view {:style (:list-wrapper styles)}
-      [rn/view {:style {:flex 1
-                        :justify-content "center"}}
-       [rn/view {:style (:first-line styles)}
-        [rn/view {:style (:primary-text-wrapper styles)}
-         [rn/text {:number-of-lines 1
-                   :style (:primary-text styles)}
-          (:title entry)]]
-        [rn/view {:style (:caption-text-wrapper styles)}
-         [rn/text {:style (:caption-text styles)} (format-entry-date (:date entry))]]]
-       [rn/view
-        [rn/text {:style (:secondary-text styles)} (str "»" (:title (:feed entry)))]]]]]))
+      [rn/view {:style (:first-line styles)}
+       [rn/text {:number-of-lines 1 :style (:title styles)} (:title entry)]
+       [rn/text {:style (:date styles)} (format-entry-date (:date entry))]]
+      [rn/text {:style (:feed styles)} (str "» " (:title (:feed entry)))]]]))
 
 (defn update-time-info [update-time]
   (let [styles {:wrapper {:background-color (:grey300 colors)
