@@ -1,7 +1,7 @@
 {
   "name": "ElfeedCljsrn",
   "interface": "reagent6",
-  "androidHost": "localhost",
+  "androidHost": "10.0.3.2",
   "iosHost": "localhost",
   "envRoots": {
     "dev": "env/dev",
