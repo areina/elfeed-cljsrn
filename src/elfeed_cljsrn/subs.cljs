@@ -8,6 +8,18 @@
     (merge {:selected? selected? :unread? unread?} entry)))
 
 (reg-sub
+ :feeds
+ (fn [db]
+   (map (fn [[_id feed]]
+          (let [selected? (= (:title feed) (:feed-title (:search db)))]
+            (merge {:selected? selected?} feed))) (:feed/by-id db))))
+
+(reg-sub
+ :total-entries
+ (fn [db]
+   (count (:entries db))))
+
+(reg-sub
  :entries
  (fn [db _]
    (map (fn [entry-id] (get-entry db entry-id)) (:entries db))))

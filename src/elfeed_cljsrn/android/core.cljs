@@ -4,6 +4,7 @@
             [elfeed-cljsrn.rn :as rn]
             [elfeed-cljsrn.navigation :refer [navigate-back navigate-to]]
             [elfeed-cljsrn.ui :as ui :refer [colors palette icon header-icon-button]]
+            [elfeed-cljsrn.android.components.drawer :refer [navigation-drawer]]
             [elfeed-cljsrn.android.scenes.configure-server :refer [configure-server-scene]]
             [elfeed-cljsrn.android.scenes.settings :refer [settings-scene]]
             [elfeed-cljsrn.android.scenes.entries :refer [entries-scene]]
@@ -44,34 +45,6 @@
   [rn/view {:style {:padding 10
                     :background-color "#fff9c4"}}
    [rn/text "Network error. Check your wifi or your elfeed server."]])
-
-(defn drawer-component []
-  (let [styles {:section {}
-                :header {:background-color (:primary palette)
-                         :height 120
-                         :margin-bottom 8 }
-                :item {:flex-direction "row"
-                       :align-items "center"
-                       :height 48
-                       :padding-left 16}
-                :icon {:padding 1}
-                :value {:font-size 14
-                        :color (:primary-text palette)
-                        :margin-left 28}}]
-    [rn/view {:style {:background-color (:white colors)}}
-     [rn/view {:style (:header styles)}]
-     [rn/view {:style {:margin-top 8}}
-      [rn/touchable {:on-press (fn []
-                                 (dispatch [:drawer/close nil]))}
-       [rn/view {:style (:item styles)}
-        [icon {:style (:icon styles) :name "rss-feed" :size 22}]
-        [rn/text {:style (:value styles)} "All entries" ]]]
-      [rn/touchable {:on-press (fn []
-                                 (dispatch [:drawer/close nil])
-                                 (navigate-to :settings))}
-       [rn/view {:style (:item styles)}
-        [icon {:style (:icon styles) :name "settings" :size 20}]
-        [rn/text {:style (:value styles)} "Settings" ]]]]]))
 
 (defn entry-actions-button [entry]
   (let [ref-icon (r/atom nil)
@@ -219,7 +192,7 @@
       (fn []
         [rn/drawer-layout {:drawer-width 300
                            :drawer-position (.. rn/ReactNative -DrawerLayoutAndroid -positions -Left)
-                           :render-navigation-view #(r/as-element [drawer-component])
+                           :render-navigation-view #(r/as-element [navigation-drawer])
                            :ref (fn [ref-drawer]
                                   (dispatch [:drawer/set ref-drawer]))}
          [rn/status-bar {:background-color (:dark-primary palette)}]
