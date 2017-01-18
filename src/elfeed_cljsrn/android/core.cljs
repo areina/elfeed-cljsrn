@@ -129,7 +129,7 @@
                                      :selection-color "white"
                                      :underline-color-android "transparent"
                                      :return-key-type "search"
-                                     :on-submit-editing (fn [e] (dispatch [:search/execute (.-text (.-nativeEvent e))]))
+                                     :on-submit-editing (fn [e] (dispatch [:search/execute {:term (.-text (.-nativeEvent e))}]))
                                      :auto-focus true}]
         right-button [header-icon-button "close" {:style {:button {:margin-right 16}
                                                           :icon {:color (:grey600 colors)}}
@@ -178,8 +178,7 @@
         selected-entries (subscribe [:selected-entries])]
     (fn [scene-props]
       (if (:searching? @search-state)
-        [header-entries-searching (or (:term @search-state)
-                                      (:default-term @search-state)) scene-props]
+        [header-entries-searching (:current-term @search-state) scene-props]
         (if (empty? @selected-entries)
           [header-entries-reading scene-props]
           [header-entries-with-actions scene-props @selected-entries])))))

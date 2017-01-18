@@ -21,6 +21,13 @@
 (defn valid-url? [url]
   (not (nil? (re-matches #"(https?://)(.*)" url))))
 
+(defn compose-query-term [search-params]
+  (let [term (if (empty? (:term search-params))
+               (:default-term search-params)
+               (:term search-params))]
+    (js/encodeURIComponent
+     (clojure.string/trim (str term " " (:feed-title search-params))))))
+
 ;; -- Interceptors -------------------------------------------------------------
 
 (defn check-and-throw
@@ -161,23 +168,25 @@
  :fetch-content
  (fn [{db :db} _]
    (if (:valid? (:server db))
-     {:dispatch-n (list [:fetch-entries] [:fetch-update-time])
+     {:dispatch-n (list [:fetch-entries (:search db)]
+                        [:fetch-update-time])
       :db db}
      {:db db})))
 
-(defn fetch-entries [{db :db} _]
+(defn fetch-entries [{db :db} [_event-id search-params]]
   (let [query-term (js/encodeURIComponent
-                    (or (:term (:search db)) (:default-term (:search db))))
+                    (or (:term search-params) (:default-term search-params)))
         uri (str (:url (:server db)) "/elfeed/search?q=" query-term)]
     {:http-xhrio {:method :post
                   :uri uri
                   :format :text
                   :response-format (ajax/json-response-format {:keywords? true})
                   :keywords? true
-                  :on-success [:success-fetch-entries]
+                  :on-success [:success-fetch-entries search-params]
                   :on-failure [:failure-fetch-entries]}
      :db (assoc db
                 :error-entries false
+                :fetching-feeds? true
                 :fetching-entries? true)}))
 
 (reg-event-fx
@@ -185,18 +194,49 @@
  fetch-entries)
 
 (reg-event-db
- :success-fetch-entries
- ->ls
+ :process-entries
+ (fn [db [_ response]]
+   ;; RN/SwipeableListView needs a collection of elements with id attribute
+   (let [by-id (reduce #(merge %1 {(:webid %2) (assoc %2 :id (:webid %2))})
+                       {} response)]
+     (assoc db
+            :fetching-entries? false
+            :entry/by-id by-id
+            :entries (map :webid response)))))
+
+(reg-event-db
+ :process-feeds
  (fn [db [_ response]]
    (-> db
-       (assoc :fetching-entries? false)
-       ;; RN/SwipeableListView needs a collection of elements with id attribute
-       (assoc :entry/by-id (reduce (fn [acc item]
-                                     (let [id (:webid item)]
-                                       (merge acc {id (assoc item :id id)})))
-                                   {}
-                                   response))
-       (assoc :entries (map :webid response)))))
+       (assoc :fetching-feeds? false)
+       (assoc :feed/by-id (reduce (fn [acc item]
+                                    (let [feed (:feed item)
+                                          feed-id (:webid feed)]
+                                      (if (get acc feed-id)
+                                        (update-in acc [feed-id :total] + 1)
+                                        (merge acc {feed-id (assoc feed
+                                                                   :id feed-id
+                                                                   :total 1)}))))
+                                  {}
+                                  response))
+       (assoc :feeds (map (fn [item] (:webid (:feed item))) response)))))
+
+(reg-event-fx
+ :success-fetch-entries
+ ->ls
+ (fn [{db :db} [_ search-params response]]
+   (if (:feed-title search-params)
+     (let [query-term (compose-query-term search-params)
+           uri (str (:url (:server db)) "/elfeed/search?q=" query-term)]
+       {:http-xhrio {:method :post
+                     :uri uri
+                     :format :text
+                     :response-format (ajax/json-response-format {:keywords? true})
+                     :keywords? true
+                     :on-success [:process-entries]
+                     :on-failure [:failure-fetch-entries]}
+        :dispatch [:process-feeds response]})
+     {:dispatch-n (list [:process-feeds response] [:process-entries response])})))
 
 (reg-event-db
  :failure-fetch-entries
@@ -413,12 +453,10 @@
  (fn [db [_ _]]
    (assoc-in db [:search :term] "")))
 
-(defn search-execute-handler [{db :db} [_event-id search-term]]
-  (let [term (if (empty? search-term) (:default-term (:search db)) search-term)]
-    {:dispatch [:fetch-entries]
-     :db (-> db
-             (assoc-in [:search :term] term)
-             (assoc-in [:search :searching?] false))}))
+(defn search-execute-handler [{db :db} [_event-id search-params]]
+  (let [new-search (merge (:search db) search-params {:searching? false})]
+    {:dispatch [:fetch-entries new-search]
+     :db (assoc db :search new-search)}))
 
 (reg-event-fx
  :search/execute

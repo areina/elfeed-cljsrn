@@ -61,4 +61,6 @@
 (reg-sub
  :search/state
  (fn [db]
-   (:search db)))
+   (let [current-term (or (:term (:search db))
+                          (:default-term (:search db)))]
+     (assoc (:search db) :current-term current-term))))
