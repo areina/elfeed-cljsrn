@@ -28,6 +28,12 @@
     (js/encodeURIComponent
      (clojure.string/trim (str term " " (:feed-title search-params))))))
 
+(def default-http-xhrio-attrs
+  {:method :post
+   :timeout 5000
+   :format (ajax/json-request-format)
+   :response-format (ajax/json-response-format {:keywords? true})})
+
 ;; -- Interceptors -------------------------------------------------------------
 
 (defn check-and-throw
@@ -110,12 +116,10 @@
  :update-server
  [check-spec]
  (fn [{db :db} [_ url]]
-   {:http-xhrio {:method :post
-                 :uri (str url "/elfeed/update")
-                 :format :json
-                 :response-format (ajax/json-response-format {:keywords? true})
-                 :on-success [:success-update-server]
-                 :on-failure [:failure-update-server]}
+   {:http-xhrio (merge default-http-xhrio-attrs
+                       {:uri (str url "/elfeed/update")
+                        :on-success [:success-update-server]
+                        :on-failure [:failure-update-server]})
     :db (assoc db :server {:url url :checking? true})}))
 
 (reg-event-fx
@@ -135,12 +139,10 @@
  (fn [{db :db} [_ url ]]
    (let [events {:db (assoc db :server {:url url :checking? true})}]
      (if (valid-url? url)
-       (merge events {:http-xhrio {:method :post
-                                   :uri (str url "/elfeed/update")
-                                   :format :json
-                                   :response-format (ajax/json-response-format {:keywords? true})
-                                   :on-success [:success-save-server]
-                                   :on-failure [:failure-save-server]}})
+       (merge events {:http-xhrio (merge default-http-xhrio-attrs
+                                         {:uri (str url "/elfeed/update")
+                                          :on-success [:success-save-server]
+                                          :on-failure [:failure-save-server]})})
        (merge events {:dispatch [:failure-save-server {:status-text "Invalid URL (should start with http://)"}]})))))
 
 (reg-event-fx
@@ -174,20 +176,15 @@
      {:db db})))
 
 (defn fetch-entries [{db :db} [_event-id search-params]]
-  (let [query-term (js/encodeURIComponent
-                    (or (:term search-params) (:default-term search-params)))
-        uri (str (:url (:server db)) "/elfeed/search?q=" query-term)]
-    {:http-xhrio {:method :post
-                  :uri uri
-                  :format :text
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :keywords? true
-                  :on-success [:success-fetch-entries search-params]
-                  :on-failure [:failure-fetch-entries]}
-     :db (assoc db
-                :error-entries false
-                :fetching-feeds? true
-                :fetching-entries? true)}))
+  (let [query-term (compose-query-term (dissoc search-params :feed-title))
+        uri (str (:url (:server db)) "/elfeed/search")]
+    {:http-xhrio (merge default-http-xhrio-attrs
+                        {:uri uri
+                         :params {:q query-term}
+                         :format (ajax/url-request-format)
+                         :on-success [:success-fetch-entries search-params]
+                         :on-failure [:failure-fetch-entries]})
+     :db (assoc db :fetching-feeds? true :fetching-entries? true)}))
 
 (reg-event-fx
  :fetch-entries
@@ -227,14 +224,13 @@
  (fn [{db :db} [_ search-params response]]
    (if (:feed-title search-params)
      (let [query-term (compose-query-term search-params)
-           uri (str (:url (:server db)) "/elfeed/search?q=" query-term)]
-       {:http-xhrio {:method :post
-                     :uri uri
-                     :format :text
-                     :response-format (ajax/json-response-format {:keywords? true})
-                     :keywords? true
-                     :on-success [:process-entries]
-                     :on-failure [:failure-fetch-entries]}
+           uri (str (:url (:server db)) "/elfeed/search")]
+       {:http-xhrio (merge default-http-xhrio-attrs
+                           {:uri uri
+                            :params {:q query-term}
+                            :format (ajax/url-request-format)
+                            :on-success [:process-entries]
+                            :on-failure [:failure-fetch-entries]})
         :dispatch [:process-feeds response]})
      {:dispatch-n (list [:process-feeds response] [:process-entries response])})))
 
@@ -270,13 +266,12 @@
  :mark-entries-as-unread
  [check-spec]
  (fn [{db :db} [_ ids]]
-   {:http-xhrio {:method :put
-                 :uri (str (:url (:server db)) "/elfeed/tags")
-                 :params {:entries ids :add (list "unread")}
-                 :format (ajax/json-request-format)
-                 :response-format (ajax/json-response-format)
-                 :on-success [:success-mark-entries-as-unread ids]
-                 :on-failure [:failure-mark-entries-as-unread ids]}
+   {:http-xhrio (merge default-http-xhrio-attrs
+                       {:method :put
+                        :uri (str (:url (:server db)) "/elfeed/tags")
+                        :params {:entries ids :add (list "unread")}
+                        :on-success [:success-mark-entries-as-unread ids]
+                        :on-failure [:failure-mark-entries-as-unread ids]})
     :db db}))
 
 (reg-event-db
@@ -300,13 +295,12 @@
  :mark-entries-as-read
  [check-spec]
  (fn [{db :db} [_ ids]]
-   {:http-xhrio {:method :put
-                 :uri (str (:url (:server db)) "/elfeed/tags")
-                 :params {:entries ids :remove (list "unread")}
-                 :format (ajax/json-request-format)
-                 :response-format (ajax/json-response-format)
-                 :on-success [:success-mark-entries-as-read ids]
-                 :on-failure [:failure-mark-entries-as-read ids]}
+   {:http-xhrio (merge default-http-xhrio-attrs
+                       {:method :put
+                        :uri (str (:url (:server db)) "/elfeed/tags")
+                        :params {:entries ids :remove (list "unread")}
+                        :on-success [:success-mark-entries-as-read ids]
+                        :on-failure [:failure-mark-entries-as-read ids]})
     :db db}))
 
 (defn success-mark-entries-as-read [db [_event-id entry-ids response]]
@@ -329,12 +323,11 @@
    db))
 
 (defn fetch-entry-content [{db :db} [_event-id entry]]
-  {:http-xhrio {:method :post
-                :uri (str (:url (:server db)) "/elfeed/content/" (:content entry))
-                :format :json
-                :response-format (ajax/text-response-format)
-                :on-success [:success-fetch-entry-content (:webid entry)]
-                :on-failure [:failure-fetch-entry-content]}
+  {:http-xhrio (merge default-http-xhrio-attrs
+                      {:uri (str (:url (:server db)) "/elfeed/content/" (:content entry))
+                       :response-format (ajax/text-response-format)
+                       :on-success [:success-fetch-entry-content (:webid entry)]
+                       :on-failure [:failure-fetch-entry-content]})
    :db (-> db
            (assoc :error-entry false
                   :current-entry (:webid entry)
@@ -368,13 +361,11 @@
 (reg-event-fx
  :fetch-update-time
  (fn [{db :db} _]
-   {:http-xhrio {:method :post
-                 :uri (str (:url (:server db)) "/elfeed/update")
-                 :params {:time (:update-time db)}
-                 :format :json
-                 :response-format (ajax/json-response-format {:keywords? true})
-                 :on-success [:success-fetch-update-time]
-                 :on-failure [:failure-fetch-update-time]}
+   {:http-xhrio (merge default-http-xhrio-attrs
+                       {:uri (str (:url (:server db)) "/elfeed/update")
+                        :params {:time (:update-time db)}
+                        :on-success [:success-fetch-update-time]
+                        :on-failure [:failure-fetch-update-time]})
     :db (assoc db :fetching-update-time true)}))
 
 (reg-event-db
