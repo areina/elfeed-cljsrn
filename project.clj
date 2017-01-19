@@ -8,8 +8,10 @@
                  [reagent "0.6.0" :exclusions [cljsjs/react cljsjs/react-dom cljsjs/react-dom-server]]
                  [re-frame "0.9.1"]
                  [day8.re-frame/async-flow-fx "0.0.6"]
-                 [day8.re-frame/http-fx "0.1.3"]]
-  :plugins [[lein-cljsbuild "1.1.4"]]
+                 [day8.re-frame/http-fx "0.1.3"]
+                 [lein-doo "0.1.7"]]
+  :plugins [[lein-cljsbuild "1.1.4"]
+            [lein-doo "0.1.7"]]
   :clean-targets ["target/" "index.ios.js" "index.android.js"]
   :aliases {"prod-build" ^{:doc "Recompile code with prod profile."}
             ["do" "clean"
@@ -22,7 +24,8 @@
                    [com.cemerick/piggieback "0.2.1"]]
     :plugins [[lein-figwheel "0.5.8"]]
     :source-paths ["src" "env/dev"]
-    :cljsbuild    {:builds [{:id "ios"
+    :cljsbuild    {:test-commands {"test" ["lein" "doo" "phantom" "test" "once"]}
+                   :builds [{:id "ios"
                              :source-paths ["src" "env/dev"]
                              :figwheel true
                              :compiler {:output-to     "target/ios/not-used.js"
@@ -36,7 +39,12 @@
                                         :output-to     "target/android/not-used.js"
                                         :output-dir    "target/android"
                                         :verbose true
-                                        :optimizations :none}}]}
+                                        :optimizations :none}}
+                            {:id "test"
+                             :source-paths ["src" "test"]
+                             :compiler {:main runners.doo
+                                        :optimizations :none
+                                        :output-to "target/test/all-tests.js"}}]}
     :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}
    :prod {:cljsbuild {:builds [{:id "ios"
                                 :source-paths ["src" "env/prod"]

@@ -1,6 +1,5 @@
 (ns elfeed-cljsrn.core-test
-  (:require [clojure.test :refer :all]
-            [elfeed-cljsrn.core :refer :all]))
+  (:require [cljs.test :refer [deftest is testing]]))
 
 (deftest a-test
   (testing "FIXME, I fail."
