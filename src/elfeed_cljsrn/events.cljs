@@ -165,22 +165,24 @@
       :db db}
      {:db db})))
 
+(defn fetch-entries [{db :db} _]
+  (let [query-term (js/encodeURIComponent
+                    (or (:term (:search db)) (:default-term (:search db))))
+        uri (str (:url (:server db)) "/elfeed/search?q=" query-term)]
+    {:http-xhrio {:method :post
+                  :uri uri
+                  :format :text
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :keywords? true
+                  :on-success [:success-fetch-entries]
+                  :on-failure [:failure-fetch-entries]}
+     :db (assoc db
+                :error-entries false
+                :fetching-entries? true)}))
+
 (reg-event-fx
  :fetch-entries
- (fn [{db :db} _]
-   (let [query-term (js/encodeURIComponent
-                     (or (:term (:search db)) (:default-term (:search db))))
-         uri (str (:url (:server db)) "/elfeed/search?q=" query-term)]
-     {:http-xhrio {:method :post
-                   :uri uri
-                   :format :text
-                   :response-format (ajax/json-response-format {:keywords? true})
-                   :keywords? true
-                   :on-success [:success-fetch-entries]
-                   :on-failure [:failure-fetch-entries]}
-      :db (assoc db
-                 :error-entries false
-                 :fetching-entries? true)})))
+ fetch-entries)
 
 (reg-event-db
  :success-fetch-entries
@@ -267,16 +269,18 @@
                  :on-failure [:failure-mark-entries-as-read ids]}
     :db db}))
 
+(defn success-mark-entries-as-read [db [_event-id entry-ids response]]
+  (update db :entry/by-id
+          (fn [entries]
+            (reduce (fn [acc id]
+                      (update-in acc [id]
+                                 (fn [entry]
+                                   (update entry :tags (fn [tags] (remove (fn [tag] (= "unread" tag)) tags)))))) entries entry-ids))))
+
 (reg-event-db
  :success-mark-entries-as-read
  [check-spec]
- (fn [db [_ ids response]]
-   (update db :entry/by-id
-           (fn [entries]
-             (reduce (fn [acc id]
-                       (update-in acc [id]
-                                  (fn [entry]
-                                    (update entry :tags (fn [tags] (remove (fn [tag] (= "unread" tag)) tags)))))) entries ids)))))
+ success-mark-entries-as-read)
 
 (reg-event-db
  :failure-mark-entries-as-read
@@ -284,30 +288,34 @@
  (fn [db [_ ids error]]
    db))
 
+(defn fetch-entry-content [{db :db} [_event-id entry]]
+  {:http-xhrio {:method :post
+                :uri (str (:url (:server db)) "/elfeed/content/" (:content entry))
+                :format :json
+                :response-format (ajax/text-response-format)
+                :on-success [:success-fetch-entry-content (:webid entry)]
+                :on-failure [:failure-fetch-entry-content]}
+   :db (-> db
+           (assoc :error-entry false
+                  :current-entry (:webid entry)
+                  :fetching-entry? true))})
+
 (reg-event-fx
  :fetch-entry-content
  [check-spec]
- (fn [{db :db} [_ entry]]
-   {:http-xhrio {:method :post
-                 :uri (str (:url (:server db)) "/elfeed/content/" (:content entry))
-                 :format :json
-                 :response-format (ajax/text-response-format)
-                 :on-success [:success-fetch-entry-content entry]
-                 :on-failure [:failure-fetch-entry-content]}
-    :db (-> db
-            (assoc :error-entry false
-                   :current-entry (:webid entry)
-                   :fetching-entry? true))}))
+ fetch-entry-content)
 
-(reg-event-db
+(defn success-fetch-entry-content [{db :db} [_event-id entry-id response]]
+  (let [clean-response (clojure.string/replace response "\n" " ")]
+    {:dispatch [:mark-entries-as-read (list entry-id)]
+     :db (-> db
+             (assoc :fetching-entry? false)
+             (assoc-in [:entry/by-id entry-id :content-body] clean-response))}))
+
+(reg-event-fx
  :success-fetch-entry-content
  [->ls check-spec]
- (fn [db [_ entry response]]
-   (dispatch [:mark-entries-as-read (list (:webid entry))])
-   (let [clean-response (clojure.string/replace response "\n" " ")]
-     (-> db
-         (assoc :fetching-entry? false)
-         (assoc-in [:entry/by-id (:webid entry) :content-body] clean-response)))))
+ success-fetch-entry-content)
 
 (reg-event-db
  :failure-fetch-entry-content
@@ -405,15 +413,17 @@
  (fn [db [_ _]]
    (assoc-in db [:search :term] "")))
 
+(defn search-execute-handler [{db :db} [_event-id search-term]]
+  (let [term (if (empty? search-term) (:default-term (:search db)) search-term)]
+    {:dispatch [:fetch-entries]
+     :db (-> db
+             (assoc-in [:search :term] term)
+             (assoc-in [:search :searching?] false))}))
+
 (reg-event-fx
  :search/execute
  [check-spec]
- (fn [{db :db} [_ search-term]]
-   (let [term (if (empty? search-term) (:default-term (:search db)) search-term)]
-     {:dispatch [:fetch-entries]
-      :db (-> db
-              (assoc-in [:search :term] term)
-              (assoc-in [:search :searching?] false))})))
+ search-execute-handler)
 
 (reg-event-db
  :search/abort
