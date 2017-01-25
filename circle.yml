@@ -1,0 +1,3 @@
+test:
+  override:
+    - lein doo node test once
