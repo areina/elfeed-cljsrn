@@ -24,7 +24,7 @@
                    [com.cemerick/piggieback "0.2.1"]]
     :plugins [[lein-figwheel "0.5.8"]]
     :source-paths ["src" "env/dev"]
-    :cljsbuild    {:test-commands {"test" ["lein" "doo" "phantom" "test" "once"]}
+    :cljsbuild    {:test-commands {"test" ["lein" "doo" "node" "test" "once"]}
                    :builds [{:id "ios"
                              :source-paths ["src" "env/dev"]
                              :figwheel true
@@ -41,10 +41,13 @@
                                         :verbose true
                                         :optimizations :none}}
                             {:id "test"
-                             :source-paths ["src" "test"]
+                             :source-paths ["src" "test" "env/test"]
                              :compiler {:main runners.doo
+                                        :preloads ['env.all]
                                         :optimizations :none
-                                        :output-to "target/test/all-tests.js"}}]}
+                                        :target :nodejs
+                                        :output-to "target/test/all-tests.js"
+                                        :output-dir "target/test"}}]}
     :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}
    :prod {:cljsbuild {:builds [{:id "ios"
                                 :source-paths ["src" "env/prod"]
