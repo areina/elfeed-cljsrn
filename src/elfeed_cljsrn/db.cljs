@@ -1,6 +1,5 @@
 (ns elfeed-cljsrn.db
-  (:require [cljs.spec :as s]
-            [elfeed-cljsrn.local-storage :as ls]))
+  (:require [cljs.spec :as s]))
 
 ;; spec of app-db
 
