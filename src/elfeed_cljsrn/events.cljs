@@ -51,7 +51,7 @@
 (reg-fx
  :open-url
  (fn [url]
-   (.openURL (.-Linking rn/ReactNative) url)))
+   (.openURL rn/linking url)))
 
 (reg-fx
  :open-drawer

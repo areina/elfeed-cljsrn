@@ -26,3 +26,4 @@
 (def status-bar (r/adapt-react-class (.-StatusBar ReactNative)))
 (def net-info (.-NetInfo ReactNative))
 (def scroll-view (r/adapt-react-class (.-ScrollView ReactNative)))
+(def linking (.-Linking ReactNative))
