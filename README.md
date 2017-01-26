@@ -41,6 +41,18 @@ I use Emacs for development and Genymotion as an Android emulator.
 - `$ script/install`
 - Open the app in Genymotion
 
+## Testing
+
+At this moment, there are almost no tests in the project. The idea is add unit
+tests for event handlers, where almost all the logic of the app is happening.
+Later, will see if it's possible to add some kind of tests for views, trying to
+introduce the idea of snapshot testing, as React Native is doing
+with [Jest](https://facebook.github.io/jest/docs/tutorial-react-native.html).
+
+### Running the tests
+
+`$ lein doo node test once`
+
 ## Todo
 
 - ~~Publish on Google Play~~
