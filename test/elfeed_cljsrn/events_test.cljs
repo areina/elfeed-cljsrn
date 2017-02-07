@@ -44,8 +44,29 @@
     "when there is feed-title in search-params"
     (let [search-params {:term "@15-days-old +unread" :feed-title "Foo"}
           term-without-feed-title (:term search-params)
+          db {}
           subject (events/fetch-entries {:db db} [:fetch/entries search-params])]
       (is (= (:params (:http-xhrio subject))
              {:q (js/encodeURIComponent term-without-feed-title)}))
       (is (= (:on-success (:http-xhrio subject)) [:success-fetch-entries search-params]))
       (is (= (:db subject) {:fetching-feeds? true :fetching-entries? true})))))
+
+(deftest success-fetch-entries-handler-test
+  (let [event-id :success-fetch-entries
+        db {}
+        response ""]
+    (testing
+      "when there is feed title"
+      (let [search-params {:term "@15-days-old +unread" :feed-title "Foo"}
+            term-with-feed-title (str (:term search-params) " " (:feed-title search-params))
+            subject (events/success-fetch-entries {:db db} [event-id search-params response])]
+        (is (= (:params (:http-xhrio subject))
+               {:q (js/encodeURIComponent term-with-feed-title)}))
+        (is (= (:on-success (:http-xhrio subject)) [:process-entries]))
+        (is (= (:dispatch subject) [:process-feeds response]))))
+    (testing
+      "when there isn't feed title"
+      (let [search-params {}
+            subject (events/success-fetch-entries {:db db} [event-id search-params response])]
+        (is (= subject
+               {:dispatch-n (list [:process-feeds response] [:process-entries response])}))))))
