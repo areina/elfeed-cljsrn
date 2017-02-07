@@ -53,3 +53,7 @@ figwheel_server.log
 
 # nrepl
 .nrepl-port
+
+# Leiningen
+.lein-failures
+.lein-repl-history
