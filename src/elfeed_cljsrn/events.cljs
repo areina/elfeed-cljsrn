@@ -51,7 +51,7 @@
 (def ->ls
   (after
    (fn [db]
-     (let [keys-to-store '(:entry/by-id :entries :nav :server :update-time)]
+     (let [keys-to-store '(:entry/by-id :feed/by-id :total-entries :entries :feeds :nav :server :update-time)]
        (ls/save (select-keys db keys-to-store))))))
 
 ;; -- Effect Handlers ----------------------------------------------------------
