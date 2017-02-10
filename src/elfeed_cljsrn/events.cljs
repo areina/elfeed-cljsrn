@@ -198,6 +198,7 @@
                        {} response)]
      (assoc db
             :fetching-entries? false
+            :error-entries false
             :entry/by-id by-id
             :entries (map :webid response)))))
 
