@@ -63,10 +63,13 @@
         (is (= (:params (:http-xhrio subject))
                {:q (js/encodeURIComponent term-with-feed-title)}))
         (is (= (:on-success (:http-xhrio subject)) [:process-entries]))
-        (is (= (:dispatch subject) [:process-feeds response]))))
+        (is (= (:dispatch-n subject) (list [:process-feeds response]
+                                           [:process-total-entries response])))))
     (testing
       "when there isn't feed title"
       (let [search-params {}
             subject (events/success-fetch-entries {:db db} [event-id search-params response])]
         (is (= subject
-               {:dispatch-n (list [:process-feeds response] [:process-entries response])}))))))
+               {:dispatch-n (list [:process-feeds response]
+                                  [:process-entries response]
+                                  [:process-total-entries response])}))))))

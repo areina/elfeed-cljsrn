@@ -17,7 +17,7 @@
 (reg-sub
  :total-entries
  (fn [db]
-   (count (:entries db))))
+   (:total-entries db)))
 
 (reg-sub
  :entries

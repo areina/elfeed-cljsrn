@@ -218,6 +218,11 @@
                                   response))
        (assoc :feeds (map (fn [item] (:webid (:feed item))) response)))))
 
+(reg-event-db
+ :process-total-entries
+ (fn [db [_ response]]
+   (assoc db :total-entries (count response))))
+
 (defn success-fetch-entries [{db :db} [_event-id search-params response]]
   (if (:feed-title search-params)
     (let [query-term (compose-query-term search-params)
@@ -228,8 +233,10 @@
                            :format (ajax/url-request-format)
                            :on-success [:process-entries]
                            :on-failure [:failure-fetch-entries]})
-       :dispatch [:process-feeds response]})
-    {:dispatch-n (list [:process-feeds response] [:process-entries response])}))
+       :dispatch-n (list [:process-feeds response] [:process-total-entries response])})
+    {:dispatch-n (list [:process-feeds response]
+                       [:process-entries response]
+                       [:process-total-entries response])}))
 
 (reg-event-fx
  :success-fetch-entries
