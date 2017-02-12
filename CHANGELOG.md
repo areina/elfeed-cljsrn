@@ -50,7 +50,8 @@ All notable changes to this project will be documented in this file. This change
 - Feed entry detail
 - Settings scene for update your Elfeed url
 
-[Unreleased]: https://github.com/areina/elfeed-cljsrn/compare/1.2.0...HEAD
+[Unreleased]: https://github.com/areina/elfeed-cljsrn/compare/1.3.0...HEAD
+[1.3.0]: https://github.com/areina/elfeed-cljsrn/compare/1.2.0...1.3.0
 [1.2.0]: https://github.com/areina/elfeed-cljsrn/compare/1.1.1...1.2.0
 [1.1.1]: https://github.com/areina/elfeed-cljsrn/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/areina/elfeed-cljsrn/compare/1.0.0...1.1.0
