@@ -1,6 +1,14 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [Unreleased]
+### Changed
+- Update ReactNative version to v0.41.2
+
+### Added
+- Add feeds info in navigation drawer
+- Add testing setup
+
 ## [1.2.0] - 2017-01-05
 ### Changed
 - Clean unnecessary code
