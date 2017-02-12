@@ -49,6 +49,7 @@
 -keepclassmembers class *  { @com.facebook.react.uimanager.annotations.ReactPropGroup <methods>; }
 
 -dontwarn com.facebook.react.**
+-dontwarn com.facebook.fbui.textlayoutbuilder.proxy.StaticLayoutProxy
 
 # okhttp
 
