@@ -1,5 +1,7 @@
 # elfeed-cljsrn
 
+[![CircleCI](https://circleci.com/gh/areina/elfeed-cljsrn.svg?style=svg)](https://circleci.com/gh/areina/elfeed-cljsrn)
+
 A mobile client for [Elfeed](https://github.com/skeeto/elfeed/) built with React
 Native and written in ClojureScript.
 
