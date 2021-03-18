@@ -26,6 +26,7 @@
         remote-error (subscribe [:remote-error :entry])
         entry-content (subscribe [:current-entry])
         content-height (r/atom nil)
+        webview-ref (r/atom nil)
         styles {:wrapper {:flex 1}
                 :header {:margin-bottom 10
                          :padding-vertical 10
@@ -75,8 +76,14 @@ window.addEventlistener(\"resize\", updateHeight);
          [rn/scroll-view {:style (:content styles)}
           [rn/view
            [rn/web-view {:style {:height (+ 100 @content-height)}
+                         :ref (fn [ref]
+                                (reset! webview-ref ref))
                          :onNavigationStateChange (fn [event]
-                                                    (reset! content-height (js/parseInt (aget event "title") 10)))
+                                                    (if (re-matches #"(https?://)(.*)" (.-url event))
+                                                      (do
+                                                        (.stopLoading @webview-ref)
+                                                        (.openURL rn/linking (.-url event)))
+                                                      (reset! content-height (js/parseInt (aget event "title") 10))))
                          :javaScriptEnabled true
                          :scrollEnabled false
                          :automaticallyAdjustContentInsets false
