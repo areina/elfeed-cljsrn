@@ -1,0 +1,27 @@
+{:source-paths
+ ["src/dev"
+  "src/main"
+  "src/test"]
+
+ :dependencies
+ [[cider/cider-nrepl "0.28.6"]
+  [day8.re-frame/async-flow-fx "0.3.0"]
+  [day8.re-frame/http-fx "0.2.4"]
+  [metosin/malli "0.10.1"]
+  [refactor-nrepl/refactor-nrepl "3.5.5"]
+  [reagent "1.1.1"]
+  [re-frame "1.3.0"]
+  [re-frisk-remote "1.6.0"]]
+
+ :builds
+ {:app
+  {:target :react-native
+   :init-fn elfeed-cljsrn.core/init
+   :compiler-options {:output-feature-set :es5}
+   :output-dir "react-native-app/app"
+   :devtools {:preloads [re-frisk-remote.preload]}
+   :js-options {:js-package-dirs ["react-native-app/node_modules"]}}
+  :test
+  {:target    :node-test
+   :output-to "out/node-tests.js"
+   :autorun   true}}}

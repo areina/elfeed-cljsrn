@@ -1,0 +1,22 @@
+(ns reagent.react-native-paper
+  (:require ["react-native-paper" :as paper]
+            [reagent.core :as r]))
+
+(def badge (r/adapt-react-class paper/Badge))
+(def banner (r/adapt-react-class paper/Banner))
+(def button (r/adapt-react-class paper/Button))
+(def chip (r/adapt-react-class paper/Chip))
+(def divider (r/adapt-react-class paper/Divider))
+(def drawer-item (r/adapt-react-class (.-Item paper/Drawer)))
+(def drawer-section (r/adapt-react-class (.-Section paper/Drawer)))
+(def helper-text (r/adapt-react-class paper/HelperText))
+(def icon-button (r/adapt-react-class paper/IconButton))
+(def list-item (r/adapt-react-class (.-Item paper/List)))
+(def list-subheader (r/adapt-react-class (.-Subheader paper/List)))
+(def menu (r/adapt-react-class paper/Menu))
+(def menu-item (r/adapt-react-class (.-Item paper/Menu)))
+(def provider (r/adapt-react-class paper/Provider))
+(def snackbar (r/adapt-react-class paper/Snackbar))
+(def text (r/adapt-react-class paper/Text))
+(def text-input (r/adapt-react-class paper/TextInput))
+(def use-theme-hook paper/useTheme)
