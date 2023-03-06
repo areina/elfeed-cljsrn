@@ -8,7 +8,7 @@
 
 (def s-server [:map
                [:url string?]
-               ;; [:valid? :boolean]
+               [:valid? :boolean]
                [:checking? :boolean]
                [:error-message {:optional true} string?]])
 

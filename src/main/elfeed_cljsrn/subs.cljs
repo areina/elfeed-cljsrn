@@ -57,7 +57,10 @@
 (reg-sub
  :selected-entries
  (fn [db]
-   (map (fn [entry-id] (get-entry db entry-id)) (:selected-entries db))))
+   (:selected-entries db)
+
+   ;; (map (fn [entry-id] (get-entry db entry-id)) (:selected-entries db))
+   ))
 
 (reg-sub
  :server

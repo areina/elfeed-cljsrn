@@ -8,14 +8,14 @@
    :format (ajax/json-request-format)
    :response-format (ajax/json-response-format {:keywords? true})})
 
-(defn- compose-query-term [search-params]
+(defn ^:private compose-query-term [search-params]
   (let [term (if (empty? (:term search-params))
                (:default-term search-params)
                (:term search-params))
         feed (when (:feed-url search-params) (str " =" (:feed-url search-params)))]
     (str/trim (str term feed))))
 
-(defn- valid-url? [url]
+(defn ^:private valid-url? [url]
   (not (nil? (re-matches #"(https?://)(.*)" url))))
 
 (defn fetch-entry-content [{db :db} [_event-id entry]]

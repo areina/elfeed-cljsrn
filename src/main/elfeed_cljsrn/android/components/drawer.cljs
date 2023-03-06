@@ -6,6 +6,8 @@
             [elfeed-cljsrn.events]
             [elfeed-cljsrn.subs]))
 
+(def drawer-content-scroll-view (r/adapt-react-class DrawerContentScrollView))
+
 (defn feed-count-entries-badge [{:keys [color count]}]
   [paper/badge {:style {:backgroundColor color}} count])
 
@@ -20,12 +22,12 @@
                                   (dispatch [:search/execute {:feed-url (:url feed) :feed-title (:title feed)}])
                                   (.navigate navigation "Entries"))}])
 
-(defn drawer [_opts]
+(defn drawer-content [_opts]
   (let [feeds (subscribe [:feeds])
         total-entries (subscribe [:total-entries])]
     (fn [opts]
       (let [filtering-by-feed? (some :selected? @feeds)]
-        [:> DrawerContentScrollView (js->clj opts)
+        [drawer-content-scroll-view (js->clj opts)
          [paper/drawer-section {}
           [paper/drawer-item {:label "All entries"
                               :icon "rss"

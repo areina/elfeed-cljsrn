@@ -2,18 +2,27 @@
   (:require [reagent.react-native :as rn]
             [reagent.react-native-paper :as paper]
             [reagent.react-native-webview :refer [web-view]]
-
+            [reagent.core :as r]
             [re-frame.core :refer [subscribe dispatch]]
-            [elfeed-cljsrn.components :refer [remote-error-message]]
+            [elfeed-cljsrn.components :refer [remote-error-message header-icon-button]]
             [elfeed-cljsrn.subs]))
 
-(defn tag [label]
+(defn ^:private header-right-actions [{:keys [^js navigation entry-id icon-color]}]
+  [rn/view {:style {:margin -16 :flex-direction "row"}}
+   [header-icon-button {:icon "email-mark-as-unread"
+                        :color icon-color
+                        :on-press (fn [_]
+                                    (dispatch [:mark-entries-as-unread (list entry-id)])
+                                    (.goBack navigation))}]
+   [header-icon-button {:icon "open-in-new"
+                        :color icon-color
+                        :on-press (fn [_]
+                                    (dispatch [:open-entry-in-browser entry-id]))}]])
+
+(defn ^:private tag [label]
   [paper/chip {:compact true :style {:margin-right 5}} label])
 
-(defn get-entry-id-from-props [^js props]
-  (aget (.-params (.-route props)) "entry-id"))
-
-(defn header [{:keys [title subtitle tags]}]
+(defn ^:private header [{:keys [title subtitle tags]}]
   [rn/view {:style {:padding-vertical 10
                     :padding-horizontal 10
                     :flexDirection "column"}}
@@ -22,7 +31,7 @@
    [rn/view {:style {:margin-top 10 :flex-direction "row"}}
     (for [tag-label tags] ^{:key tag-label} [tag tag-label])]])
 
-(defn wrap-content [{:keys [content dark?]}]
+(defn ^:private wrap-content [{:keys [content dark?]}]
   (str "<!DOCTYPE html><html>"
        "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>"
        (if dark?
@@ -32,13 +41,13 @@
        "</body>"
        "</html>"))
 
-(defn loading []
+(defn ^:private loading []
   [rn/view {:style {:flex 1
                     :justify-content "center"
                     :align-items "center"}}
    [rn/activity-indicator {:size "large"}]])
 
-(defn scene [{:keys [entry loading? error]}]
+(defn ^:private scene [{:keys [entry loading? error]}]
   (let [theme ^js (paper/use-theme-hook)]
     [rn/view {:style {:flex 1}}
      (when error
@@ -59,9 +68,17 @@
                                                        false)
                   :source {:html (wrap-content {:content (:content-body entry) :dark? (.-dark theme)})}}])]))
 
-(defn entry-scene [^js _props]
+(defn entry-scene-options [{:keys [^js navigation ^js route]}]
+  (let [entry-id (aget route "entry-id")]
+    {:title ""
+     :animation "fade_from_bottom"
+     :headerRight (fn [^js opts]
+                    (r/as-element [header-right-actions {:navigation navigation
+                                                         :entry-id entry-id
+                                                         :icon-color (.-tintColor opts)}]))}))
+
+(defn entry-scene [{:keys [_navigation _route]}]
   (let [loading? (subscribe [:fetching-entry?])
         remote-error (subscribe [:remote-error :entry])
         entry-content (subscribe [:current-entry])]
-
     [:f> scene {:loading? @loading? :entry @entry-content :error @remote-error}]))

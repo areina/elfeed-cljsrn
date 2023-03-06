@@ -1,16 +1,17 @@
 (ns elfeed-cljsrn.android.scenes.entries
   (:require [reagent.core :as r]
+            ["react-native" :refer [useWindowDimensions]]
             [reagent.react-native :as rn]
             [reagent.react-native-paper :as paper]
             [re-frame.core :refer [subscribe dispatch]]
             [elfeed-cljsrn.events]
-            [elfeed-cljsrn.components :refer [remote-error-message]]
+            [elfeed-cljsrn.components :refer [remote-error-message header-icon-button]]
             [elfeed-cljsrn.subs])
   (:import [goog.i18n DateTimeFormat]))
 
 (defn format-update-time [time]
   (let [js-date (js/Date. (* time 1000))]
-    (.format (DateTimeFormat. "dd/MM/yyyy hh:mm") js-date)))
+    (.format (DateTimeFormat. "dd/MM/yyyy h:mm a") js-date)))
 
 (defn format-entry-date [date]
   (let [js-date (js/Date. date)]
@@ -23,11 +24,93 @@
 
 (defn no-entries-component [_props]
   [rn/view {:style {:flex 1
-                    :border-width 1
                     :justify-content "center"
                     :align-items "center"}}
    [paper/icon-button {:color "black" :icon "rss" :size 84}]
    [paper/text {:variant "bodyMedium"} "There are no entries"]])
+
+(defn search-button [{:keys [color]}]
+  [header-icon-button {:icon "magnify"
+                       :color color
+                       :on-press (fn [_]
+                                   (dispatch [:search/init]))}])
+
+(defn searchbar [{:keys [default-value on-change-text on-close on-end-editing]}]
+  (let [theme ^js (paper/use-theme-hook)
+        color (.-onPrimary (.-colors theme))]
+    [rn/view {:style {:flex-direction "row"
+                      :align-items "center"}
+              :theme theme}
+     [rn/text-input {:placeholder "Search"
+                     :auto-focus true
+                     :cursor-color color
+                     :placeholder-text-color color
+                     :style {:color color
+                             :flex 1
+                             :padding-left 0
+                             :align-self "stretch"
+                             :font-size 16
+                             :min-height 56}
+                     :return-key-type "search"
+                     :defaultValue default-value
+                     :on-change-text on-change-text
+                     :on-end-editing on-end-editing}]
+     (when default-value
+       [paper/icon-button {:icon "close"
+                           :icon-color color
+                           :on-press on-close}])]))
+
+(defn entries-search-input [current-term]
+  (let [term (r/atom current-term)]
+    (fn [_current-term]
+      (let [dimensions (useWindowDimensions)]
+        [rn/view {:style {:flex 1
+                          :min-width (- (.-width dimensions) 72)}}
+         [:f> searchbar {:default-value @term
+                         :on-change-text (fn [text]
+                                           (reset! term text))
+                         :on-close (fn [^js _e]
+                                     (reset! term nil))
+                         :on-end-editing (fn [^js e]
+                                           (let [text (.-text (.-nativeEvent e))]
+                                             (if (seq text)
+                                               (dispatch [:search/execute {:term text}])
+                                               (dispatch [:search/abort]))))}]]))))
+
+(defn entries-screen-options-on-selecting [selected-entries]
+  (let [right-button (if (:unread? (last selected-entries))
+                       [header-icon-button  {:icon "email-open"
+                                             :on-press (fn [_]
+                                                         (dispatch [:mark-entries-as-read selected-entries])
+                                                         (dispatch [:clear-selected-entries]))}]
+                       [header-icon-button  {:icon "email-mark-as-unread"
+                                             :on-press (fn [_]
+                                                         (dispatch [:mark-entries-as-unread selected-entries])
+                                                         (dispatch [:clear-selected-entries]))}])]
+
+    {:title (str (count selected-entries))
+     :headerLeft #(r/as-element [header-icon-button {:icon "arrow-left"
+                                                     :on-press (fn [_]
+                                                                 (dispatch [:clear-selected-entries]))}])
+     :headerRight #(r/as-element right-button)}))
+
+(defn entries-screen-options-on-searching [search-state]
+  {:headerTitle #(r/as-element [:f> entries-search-input (:current-term search-state)])
+   :headerTitleContainerStyle {:flexGrow 1}
+   :headerLeft #(r/as-element [header-icon-button {:icon "arrow-left"
+                                                   :on-press (fn [_]
+                                                               (dispatch [:search/abort]))}])})
+
+(defn entries-scene-options [search-state selected-entries]
+  (let [default-options {:title "All entries"
+                         :headerRight (fn [^js props]
+                                        (r/as-element [search-button (.-tintColor props)]))}]
+
+    (if (:searching? search-state)
+      (entries-screen-options-on-searching search-state)
+      (if (seq selected-entries)
+        (entries-screen-options-on-selecting selected-entries)
+        default-options))))
 
 (defn entry-separator []
   [paper/divider])
@@ -36,13 +119,13 @@
   [paper/text {:variant "labelSmall"
                :style {:fontWeight (when unread? "bold")}} (format-entry-date date)])
 
-(defn entry-row [navigation entry]
+(defn entry-row [{:keys [navigation entry]}]
   (let [theme ^js (paper/use-theme-hook)
         on-long-press (fn [_event]
                         (dispatch [:toggle-select-entry entry]))
-        on-press (fn [_event]
+        on-press (fn [_event] 
                    (dispatch [:fetch-entry-content entry])
-                   (.navigate navigation "Entry" (clj->js {:entry-id (:webid entry)})))]
+                   (.navigate navigation "Entry" #js {:entry-id (:webid entry)}))]
     [paper/list-item {:title (:title entry)
                       :title-style {:fontWeight (when (:unread? entry) "bold")}
                       :description (str "» " (:title (:feed entry)))
@@ -54,18 +137,19 @@
                       :on-long-press on-long-press
                       :right #(r/as-element [entry-date (:date entry) (:unread? entry)])}]))
 
-(defn entry-row-wrapper [navigation entry-id]
-  [:f> entry-row navigation entry-id])
+(defn entry-row-wrapper [props]
+  [:f> entry-row props])
 
-(defn entries-scene [props]
+(defn entries-scene [_props]
   (let [loading (subscribe [:loading?])
         update-time (subscribe [:update-time])
-        remote-error (subscribe [:remote-error :entries])
+        remote-error-entries (subscribe [:remote-error :entries])
+        remote-error-update-time (subscribe [:remote-error :update-time])
         entries (subscribe [:entries])]
-    (fn []
+    (fn [{:keys [navigation]}]
       [rn/view {:style {:flex 1}}
-       (when @remote-error
-         [remote-error-message (.-navigation props)])
+       (when (or @remote-error-entries @remote-error-update-time)
+         [remote-error-message navigation])
        [rn/flat-list {:data (clj->js @entries)
                       :style {:flex 1}
                       :contentContainerStyle {:flexGrow 1}
@@ -73,7 +157,8 @@
                       :onRefresh (fn [] (dispatch [:fetch-content]))
                       :keyExtractor (fn [item] (.toString (.-id item)))
                       :renderItem (fn [opts]
-                                    (r/as-element [entry-row-wrapper (.-navigation props) (js->clj (.-item opts) :keywordize-keys true)]))
+                                    (r/as-element [entry-row-wrapper {:navigation navigation
+                                                                      :entry (js->clj (.-item opts) :keywordize-keys true)}]))
                       :ListHeaderComponent (r/as-element [update-time-info @update-time])
                       :ListEmptyComponent (r/as-element [no-entries-component])
                       :ItemSeparatorComponent (r/as-element [entry-separator])}]])))

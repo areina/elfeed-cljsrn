@@ -16,6 +16,8 @@
 (def menu (r/adapt-react-class paper/Menu))
 (def menu-item (r/adapt-react-class (.-Item paper/Menu)))
 (def provider (r/adapt-react-class paper/Provider))
+(def searchbar (r/adapt-react-class paper/Searchbar))
+(def surface (r/adapt-react-class paper/Surface))
 (def snackbar (r/adapt-react-class paper/Snackbar))
 (def text (r/adapt-react-class paper/Text))
 (def text-input (r/adapt-react-class paper/TextInput))
