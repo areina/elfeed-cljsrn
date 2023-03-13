@@ -45,7 +45,6 @@
   {:http-xhrio (merge default-http-xhrio-attrs
                       {:uri (str (:url (:server db)) "/elfeed/update")
                        :method :get
-                       :params {:time (:update-time db)}
                        :on-success [:success-fetch-update-time]
                        :on-failure [:failure-fetch-update-time]})
    :db (assoc db :fetching-update-time? true)})

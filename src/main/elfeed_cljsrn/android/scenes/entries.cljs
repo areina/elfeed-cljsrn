@@ -19,7 +19,7 @@
 
 (defn update-time-info [update-time]
   [paper/list-subheader
-   [paper/text {:variant "labelmedium"}
+   [paper/text {:variant "labelMedium"}
     (str "LAST UPDATE: ")] (format-update-time update-time)])
 
 (defn no-entries-component [_props]

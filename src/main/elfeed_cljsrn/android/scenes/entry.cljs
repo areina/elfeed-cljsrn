@@ -69,7 +69,7 @@
                   :source {:html (wrap-content {:content (:content-body entry) :dark? (.-dark theme)})}}])]))
 
 (defn entry-scene-options [{:keys [^js navigation ^js route]}]
-  (let [entry-id (aget route "entry-id")]
+  (let [entry-id (aget (.-params route) "entry-id")]
     {:title ""
      :animation "fade_from_bottom"
      :headerRight (fn [^js opts]
