@@ -41,7 +41,8 @@
 (reg-sub
  :loading?
  (fn [db]
-   (:fetching-entries? db)))
+   (or (:fetching-entries? db)
+       (:fetching-update-time? db))))
 
 (reg-sub
  :fetching-entry?
@@ -57,10 +58,7 @@
 (reg-sub
  :selected-entries
  (fn [db]
-   (:selected-entries db)
-
-   ;; (map (fn [entry-id] (get-entry db entry-id)) (:selected-entries db))
-   ))
+   (:selected-entries db)))
 
 (reg-sub
  :server
