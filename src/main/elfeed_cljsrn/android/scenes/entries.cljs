@@ -78,15 +78,13 @@
                                                (dispatch [:search/abort]))))}]]))))
 
 (defn entries-screen-options-on-selecting [selected-entries]
-  (let [right-button (if (:unread? (last selected-entries))
-                       [header-icon-button  {:icon "email-open"
-                                             :on-press (fn [_]
-                                                         (dispatch [:mark-entries-as-read selected-entries])
-                                                         (dispatch [:clear-selected-entries]))}]
-                       [header-icon-button  {:icon "email-mark-as-unread"
-                                             :on-press (fn [_]
-                                                         (dispatch [:mark-entries-as-unread selected-entries])
-                                                         (dispatch [:clear-selected-entries]))}])]
+  (let [ids (map :webid selected-entries)
+        icon (if (:unread? (last selected-entries)) "email-open" "email-mark-as-unread")
+        next-state (if (:unread? (last selected-entries)) :read :unread)
+        right-button [header-icon-button  {:icon icon
+                                           :on-press (fn [_]
+                                                       (dispatch [:mark-entries-as next-state ids])
+                                                       (dispatch [:clear-selected-entries]))}]]
 
     {:title (str (count selected-entries))
      :headerLeft #(r/as-element [header-icon-button {:icon "arrow-left"

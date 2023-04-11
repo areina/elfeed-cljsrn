@@ -12,7 +12,7 @@
    [header-icon-button {:icon "email-mark-as-unread"
                         :color icon-color
                         :on-press (fn [_]
-                                    (dispatch [:mark-entries-as-unread (list entry-id)])
+                                    (dispatch [:mark-entries-as :unread (list entry-id)])
                                     (.goBack navigation))}]
    [header-icon-button {:icon "open-in-new"
                         :color icon-color

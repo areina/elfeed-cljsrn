@@ -49,23 +49,17 @@
                        :on-failure [:failure-fetch-update-time]})
    :db (assoc db :fetching-update-time? true)})
 
-(defn mark-entries-as-unread [{db :db} [_ ids]]
-  {:http-xhrio (merge default-http-xhrio-attrs
-                      {:method :put
-                       :uri (str (:url (:server db)) "/elfeed/tags")
-                       :params {:entries ids :add (list "unread")}
-                       :on-success [:success-mark-entries-as-unread ids]
-                       :on-failure [:failure-mark-entries-as-unread ids]})
-   :db db})
-
-(defn mark-entries-as-read [{db :db} [_ ids]]
-  {:http-xhrio (merge default-http-xhrio-attrs
-                      {:method :put
-                       :uri (str (:url (:server db)) "/elfeed/tags")
-                       :params {:entries ids :remove (list "unread")}
-                       :on-success [:success-mark-entries-as-read ids]
-                       :on-failure [:failure-mark-entries-as-read ids]})
-   :db db})
+(defn mark-entries-as [{db :db} [_ state ids]]
+  (let [params {:entries ids
+                :add (when (= state :unread) (list "unread"))
+                :remove (when (= state :read) (list "unread"))}]
+    {:http-xhrio (merge default-http-xhrio-attrs
+                        {:method :put
+                         :uri (str (:url (:server db)) "/elfeed/tags")
+                         :params params
+                         :on-success [:success-mark-entries-as state ids]
+                         :on-failure [:failure-mark-entries-as state ids]})
+     :db db}))
 
 (defn search-execute [{db :db} [_event-id search-params]]
   (let [new-search (merge (:search db) search-params {:searching? false})]
@@ -90,29 +84,25 @@
 
 (defn success-fetch-entry-content [{db :db} [_event-id entry-id response]]
   (let [clean-response (str/replace response "\n" " ")]
-    {:dispatch [:mark-entries-as-read (list entry-id)]
+    {:dispatch [:mark-entries-as :read (list entry-id)]
      :db (-> db
              (assoc :fetching-entry? false)
              (assoc-in [:entry/by-id entry-id :content-body] clean-response))}))
 
-(defn success-mark-entries-as-read [db [_event-id entry-ids _response]]
-  (-> db
-      (dissoc :error-mark-entries)
-      (update :entry/by-id
-              (fn [entries]
-                (reduce (fn [acc id]
-                          (update-in acc [id]
-                                     (fn [entry]
-                                       (update entry :tags (fn [tags] (remove (fn [tag] (= "unread" tag)) tags)))))) entries entry-ids)))))
-
-(defn success-mark-entries-as-unread [db [_event-id ids _response]]
-  (-> db
-      (dissoc :error-mark-entries)
-      (update :entry/by-id (fn [entries]
-                             (reduce
-                              (fn [acc id]
-                                (update-in acc [id] (fn [entry]
-                                                      (update entry :tags conj "unread")))) entries ids)))))
+(defn success-mark-entries-as [db [_event-id state ids _response]]
+  (let [next-state-fn (if (= state :read)
+                        (fn [entry]
+                          (update entry :tags (fn [tags] (remove (fn [tag] (= "unread" tag)) tags))))
+                        (fn [entry]
+                          (update entry :tags conj "unread"))
+                        )]
+    (-> db
+        (dissoc :error-mark-entries)
+        (update :entry/by-id
+                (fn [entries]
+                  (reduce
+                   (fn [acc id]
+                     (update-in acc [id] next-state-fn)) entries ids))))))
 
 (defn save-server [{db :db} [_event-id url]]
   (let [events {:db (assoc db :server {:url url :valid? false :checking? true})}]

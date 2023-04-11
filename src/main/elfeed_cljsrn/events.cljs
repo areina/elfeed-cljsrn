@@ -202,37 +202,21 @@
      {:dispatch-n (list [:fetch-entry-content entry])}
      {:dispatch [:toggle-select-entry entry]})))
 
-(reg-event-fx
- :mark-entries-as-unread
- interceptors
- handlers/mark-entries-as-unread)
-
 (reg-event-db
- :success-mark-entries-as-unread
- interceptors
- handlers/success-mark-entries-as-unread)
-
-(reg-event-db
- :failure-mark-entries-as-unread
+ :failure-mark-entries-as
  interceptors
  (fn [db [_ _ids error]]
    (assoc db :error-mark-entries error)))
 
 (reg-event-fx
- :mark-entries-as-read
+ :mark-entries-as
  interceptors
- handlers/mark-entries-as-read)
+ handlers/mark-entries-as)
 
 (reg-event-db
- :success-mark-entries-as-read
+ :success-mark-entries-as
  interceptors
- handlers/success-mark-entries-as-read)
-
-(reg-event-db
- :failure-mark-entries-as-read
- interceptors
- (fn [db [_ _ids error]]
-   (assoc db :error-mark-entries error)))
+ handlers/success-mark-entries-as)
 
 (reg-event-fx
  :fetch-entry-content
