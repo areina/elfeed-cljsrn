@@ -2,8 +2,13 @@
   "name": "elfeed-cljsrn-wrapper",
   "version": "0.0.1",
   "private": true,
+  "scripts": {
+    "watch": "shadow-cljs watch app",
+    "start": "npm start --prefix react-native-app",
+    "release": "rm -rf react-native-app/app/ && shadow-cljs release app && npm run android --prefix react-native-app -- --mode=release"
+  },
   "devDependencies": {
-    "shadow-cljs": "2.22.2"
+    "shadow-cljs": "2.24.0"
   },
   "dependencies": {}
 }

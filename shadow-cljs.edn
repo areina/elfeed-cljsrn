@@ -4,12 +4,12 @@
   "src/test"]
 
  :dependencies
- [[cider/cider-nrepl "0.30.0"]
-  [day8.re-frame/async-flow-fx "0.3.0"]
+ [[cider/cider-nrepl "0.31.0"]
+  [day8.re-frame/async-flow-fx "0.4.0"]
   [day8.re-frame/http-fx "0.2.4"]
-  [metosin/malli "0.10.2"]
+  [metosin/malli "0.11.0"]
   [refactor-nrepl/refactor-nrepl "3.6.0"]
-  [reagent "1.1.1"]
+  [reagent "1.2.0"]
   [re-frame "1.3.0"]
   [re-frisk-remote "1.6.0"]]
 
