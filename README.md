@@ -9,24 +9,20 @@ Native and written in ClojureScript.
 
 Elfeed for Android is available
 in [Google Play](https://play.google.com/store/apps/details?id=com.elfeedcljsrn)
-or you can download APK's directly
+or you can download the APKs directly
 from [Github releases](https://github.com/areina/elfeed-cljsrn/releases)
 
 ## Motivation
 
 Elfeed is an excellent RSS reader for Emacs and I was using it daily but now I'm
 traveling around and I need a basic mobile app. Also, this was a perfect excuse
-to play a bit with RN and CLJS.
+to play a bit with React Native and ClojureScript.
 
 This project uses:
-* [React Native](https://facebook.github.io/react-native/)
-* [Re-frame](https://github.com/Day8/re-frame)
-* [Re-natal](https://github.com/drapanjanas/re-natal/)
-
-I'm using Docker and Docker Compose in my development environment because I
-didn't want to install npm, js packages and all the Android libraries in my
-laptop. I'm not totally comfortable with this way setup and probably it wouldn't
-fit very well for iOS development, will see.
+* [React Native](https://facebook.github.io/react-native)
+* [Reagent](https://github.com/reagent-project/reagent)
+* [re-frame](https://github.com/Day8/re-frame)
+* [shadow-cljs](https://github.com/thheller/shadow-cljs)
 
 ## Screenshots
 
@@ -34,14 +30,19 @@ fit very well for iOS development, will see.
 
 ## Development
 
-I use Emacs for development and Genymotion as an Android emulator.
+First, you need to start shadow-cljs to compile the project:
 
-- `$ script/boot` # Start RN packager and a clojure REPL
-- `$ script/dev-build`
-- `M-x cider-connect ; localhost ; 7888` # Connect to clojure REPL in port 7888
-- `user> (start-figwheel "android")`
-- `$ script/install`
-- Open the app in Genymotion
+- `npm run watch`
+
+Once shadow-cljs is running, we can start metro (react native) and run the app in a device:
+
+- `npm start`
+
+You can connect to a running REPL. Using Emacs and Cider, you can execute: 
+
+- `cider-connect-cljs`
+
+
 
 ## Testing
 
@@ -54,6 +55,24 @@ with [Jest](https://facebook.github.io/jest/docs/tutorial-react-native.html).
 ### Running the tests
 
 `$ lein doo node test once`
+
+## Managing dependencies
+
+```sh
+clojure -Tantq outdated :upgrade true
+npm outdated
+cd react-native-app
+npm outdated
+```
+
+## Local release/installation
+
+- `npm run release`
+
+- `rm -rf react-native-app/app/`
+- `npx shadow-cljs release app`
+- `./react-native-app/android/gradlew assembleRelease`
+- `adb install react-native-app/android/app/build/outputs/apk/release/app-release.apk`
 
 ## Todo
 
