@@ -19,16 +19,20 @@
   (not (nil? (re-matches #"(https?://)(.*)" url))))
 
 (defn fetch-entry-content [{db :db} [_event-id entry]]
-  {:http-xhrio (merge default-http-xhrio-attrs
-                      {:uri (str (:url (:server db)) "/elfeed/content/" (:content entry))
-                       :response-format (ajax/text-response-format)
-                       :on-success [:success-fetch-entry-content (:webid entry)]
-                       :on-failure [:failure-fetch-entry-content]})
-   :db (-> db
-           (assoc :error-entry false
-                  :current-entry (:webid entry)
-                  :fetching-entry? true))})
-
+  (if (:content-body (get (:entry/by-id db) (:webid entry)))
+    {:db db}
+    {:http-xhrio (merge default-http-xhrio-attrs
+                        {:uri (str (:url (:server db)) "/elfeed/content/" (:content entry))
+                         :response-format (ajax/text-response-format)
+                         :on-success [:success-fetch-entry-content (:webid entry)]
+                         :on-failure [:failure-fetch-entry-content (:webid entry)]})
+     :db (-> db
+             ;; (assoc-in [:entry/by-id (:webid entry) :fetching?] true)
+             ;; (assoc :error-entry false
+             ;;        ;; :current-entry (:webid entry)
+             ;;        ;; :fetching-entry? true
+             ;;        )
+             )}))
 (defn fetch-entries [{db :db} [_event-id search-params]]
   (let [query-term (compose-query-term (dissoc search-params :feed-url))
         uri (str (:url (:server db)) "/elfeed/search")]
@@ -83,19 +87,20 @@
                        [:process-total-entries response])}))
 
 (defn success-fetch-entry-content [{db :db} [_event-id entry-id response]]
-  (let [clean-response (str/replace response "\n" " ")]
+  (let [cleaned-response (str/replace response "\n" " ")]
     {:dispatch [:mark-entries-as :read (list entry-id)]
      :db (-> db
-             (assoc :fetching-entry? false)
-             (assoc-in [:entry/by-id entry-id :content-body] clean-response))}))
+             (assoc-in [:entry/by-id entry-id :content-body] cleaned-response)
+             (assoc-in [:entry/by-id entry-id :error-fetching] nil)
+             ;; (assoc :fetching-entry? false)
+             )}))
 
 (defn success-mark-entries-as [db [_event-id state ids _response]]
   (let [next-state-fn (if (= state :read)
                         (fn [entry]
                           (update entry :tags (fn [tags] (remove (fn [tag] (= "unread" tag)) tags))))
                         (fn [entry]
-                          (update entry :tags conj "unread"))
-                        )]
+                          (update entry :tags conj "unread")))]
     (-> db
         (dissoc :error-mark-entries)
         (update :entry/by-id

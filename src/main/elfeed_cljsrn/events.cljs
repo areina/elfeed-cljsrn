@@ -194,14 +194,6 @@
  (fn [db [_ _]]
    (assoc db :selected-entries nil)))
 
-(reg-event-fx
- :press-entry-row
- interceptors
- (fn [{db :db} [_ entry]]
-   (if (empty? (:selected-entries db))
-     {:dispatch-n (list [:fetch-entry-content entry])}
-     {:dispatch [:toggle-select-entry entry]})))
-
 (reg-event-db
  :failure-mark-entries-as
  interceptors
@@ -228,13 +220,12 @@
  interceptors
  handlers/success-fetch-entry-content)
 
-(reg-event-db
+(reg-event-fx
  :failure-fetch-entry-content
  interceptors
- (fn [db [_ error]]
-   (-> db
-       (assoc :fetching-entry? false)
-       (assoc :error-entry error))))
+ (fn [{db :db} [_ entry-id error]]
+   {:db (-> db
+            (assoc-in [:entry/by-id entry-id :error-fetching] error))}))
 
 (reg-event-fx
  :fetch-update-time

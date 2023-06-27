@@ -43,14 +43,14 @@
            [drawer-screen
             {:name "Entries"
              :options (fn [] (clj->js (entries-scene-options search-state selected-entries)))}
-            (fn [props] (r/as-element [entries-scene (screen-opts->clj props)]))]
+            (fn [props] (r/as-element [:f> entries-scene (screen-opts->clj props)]))]
            [drawer-screen
             {:name "Settings"}
             (fn [props] (r/as-element [settings-scene (screen-opts->clj props)]))]]))]
       [stack-screen
        {:name "Entry"
         :options (fn [opts] (clj->js (entry-scene-options (screen-opts->clj opts))))}
-       (fn [opts] (r/as-element [entry-scene (screen-opts->clj opts)]))]]]))
+       (fn [opts] (r/as-element [:f> entry-scene (screen-opts->clj opts)]))]]]))
 
 (defn app []
   (let [server-configured? (subscribe [:server-configured?])

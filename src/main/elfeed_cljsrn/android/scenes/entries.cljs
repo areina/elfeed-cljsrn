@@ -117,13 +117,16 @@
   [paper/text {:variant "labelSmall"
                :style {:fontWeight (when unread? "bold")}} (format-entry-date date)])
 
-(defn entry-row [{:keys [navigation entry]}]
+(defn entry-row [{:keys [navigation entry on-press index]}]
   (let [theme ^js (paper/use-theme-hook)
         on-long-press (fn [_event]
                         (dispatch [:toggle-select-entry entry]))
-        on-press (fn [_event] 
-                   (dispatch [:fetch-entry-content entry])
-                   (.navigate navigation "Entry" #js {:entry-id (:webid entry)}))]
+        on-press (fn [_event]
+                   (on-press index)
+                   (dispatch [:fetch-entry-content {:webid (:webid entry)
+                                                    :content (:content entry)}])
+                   (.navigate navigation "Entry" #js {:entry-id (:webid entry)
+                                                      :index index}))]
     [paper/list-item {:title (:title entry)
                       :title-style {:fontWeight (when (:unread? entry) "bold")}
                       :description (str "» " (:title (:feed entry)))
@@ -135,28 +138,34 @@
                       :on-long-press on-long-press
                       :right #(r/as-element [entry-date (:date entry) (:unread? entry)])}]))
 
-(defn entry-row-wrapper [props]
-  [:f> entry-row props])
-
 (defn entries-scene [_props]
   (let [loading (subscribe [:loading?])
         update-time (subscribe [:update-time])
         remote-error-entries (subscribe [:remote-error :entries])
         remote-error-update-time (subscribe [:remote-error :update-time])
-        entries (subscribe [:entries])]
+        entries (subscribe [:entries])
+        on-press (fn [index]
+                   (when (< (+ index 1) (count @entries))
+                     (dispatch [:fetch-entry-content (select-keys (nth @entries (+ index 1)) [:webid :content])]))
+                   (when (> index 0)
+                     (dispatch [:fetch-entry-content (select-keys (nth @entries (- index 1)) [:webid :content])])))]
+
     (fn [{:keys [navigation]}]
       [rn/view {:style {:flex 1}}
        (when (or @remote-error-entries @remote-error-update-time)
          [remote-error-message navigation])
        [rn/flat-list {:data (clj->js @entries)
                       :style {:flex 1}
-                      :contentContainerStyle {:flexGrow 1}
+                      :content-container-style {:flexGrow 1}
                       :refreshing (boolean @loading)
-                      :onRefresh (fn [] (dispatch [:fetch-content]))
-                      :keyExtractor (fn [item] (.toString (.-id item)))
-                      :renderItem (fn [opts]
-                                    (r/as-element [entry-row-wrapper {:navigation navigation
-                                                                      :entry (js->clj (.-item opts) :keywordize-keys true)}]))
+                      :on-refresh (fn [] (dispatch [:fetch-content]))
+                      :key-extractor (fn [item] (.toString (.-id item)))
+                      :render-item (fn [opts]
+                                     (let [current-index (.-index opts)]
+                                       (r/as-element [:f> entry-row {:navigation navigation
+                                                                     :index current-index
+                                                                     :on-press on-press
+                                                                     :entry (js->clj (.-item opts) :keywordize-keys true)}])))
                       :ListHeaderComponent (r/as-element [update-time-info @update-time])
                       :ListEmptyComponent (r/as-element [no-entries-component])
                       :ItemSeparatorComponent (r/as-element [entry-separator])}]])))
