@@ -8,7 +8,7 @@
     "release": "rm -rf react-native-app/app/ && shadow-cljs release app && npm run android --prefix react-native-app -- --mode=release"
   },
   "devDependencies": {
-    "shadow-cljs": "2.24.0"
-  },
-  "dependencies": {}
+    "shadow-cljs": "2.24.0",
+    "xmlhttprequest": "^1.8.0"
+  }
 }

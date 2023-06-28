@@ -38,23 +38,19 @@ Once shadow-cljs is running, we can start metro (react native) and run the app i
 
 - `npm start`
 
-You can connect to a running REPL. Using Emacs and Cider, you can execute: 
+After that, it's possible to connect to a running REPL. If you are using Emacs
+and Cider, you can execute:
 
 - `cider-connect-cljs`
 
-
-
 ## Testing
 
-At this moment, there are almost no tests in the project. The idea is add unit
-tests for event handlers, where almost all the logic of the app is happening.
-Later, will see if it's possible to add some kind of tests for views, trying to
-introduce the idea of snapshot testing, as React Native is doing
-with [Jest](https://facebook.github.io/jest/docs/tutorial-react-native.html).
+At this moment, there are just a few unit tests in projects. Events/handlers are
+tested, where most of the logic of the application is happening.
 
 ### Running the tests
 
-`$ lein doo node test once`
+`npx shadow-cljs watch test`
 
 ## Managing dependencies
 
@@ -68,11 +64,6 @@ npm outdated
 ## Local release/installation
 
 - `npm run release`
-
-- `rm -rf react-native-app/app/`
-- `npx shadow-cljs release app`
-- `./react-native-app/android/gradlew assembleRelease`
-- `adb install react-native-app/android/app/build/outputs/apk/release/app-release.apk`
 
 ## Todo
 
