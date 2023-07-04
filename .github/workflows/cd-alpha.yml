@@ -1,0 +1,58 @@
+name: Alpha distribution
+
+on:
+  push:
+    branches:
+      - alpha
+
+jobs:
+  test:
+    uses: ./.github/workflows/tests.yml
+  build:
+    name: Build app
+    runs-on: ubuntu-latest
+    container:
+      image: docker://fabernovel/android:api-33-v1.7.0
+    needs: [test]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Prepare Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: 'react-native-app/package-lock.json'
+      - run: npm ci
+      - name: Prepare java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+      - name: Install clojure tools
+        uses: DeLaGuardo/setup-clojure@11.0
+        with:
+          cli: 'latest'
+      - name: Cache clojure dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.deps.clj
+          # List all files containing dependencies:
+          key: cljdeps-${{ hashFiles('shadow-cljs.edn') }}
+          restore-keys: cljdeps-
+      - name: Build cljs code
+        run: npx shadow-cljs release app
+      - name: Build AAB
+        run: npx react-native build-android --mode=release
+
+  alpha-distribution:
+    name: Alpha distribution
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: echo
+        run: echo 'hola'
