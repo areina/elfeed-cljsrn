@@ -26,13 +26,8 @@
                          :response-format (ajax/text-response-format)
                          :on-success [:success-fetch-entry-content (:webid entry)]
                          :on-failure [:failure-fetch-entry-content (:webid entry)]})
-     :db (-> db
-             ;; (assoc-in [:entry/by-id (:webid entry) :fetching?] true)
-             ;; (assoc :error-entry false
-             ;;        ;; :current-entry (:webid entry)
-             ;;        ;; :fetching-entry? true
-             ;;        )
-             )}))
+     :db db}))
+
 (defn fetch-entries [{db :db} [_event-id search-params]]
   (let [query-term (compose-query-term (dissoc search-params :feed-url))
         uri (str (:url (:server db)) "/elfeed/search")]

@@ -93,14 +93,20 @@
  :success-update-server
  interceptors
  (fn [{db :db} _]
-   {:db (update db :server merge {:valid? true :checking? false})}))
+   {:dispatch [:ui/update-feedback "The server info has been updated."]
+    :db (-> db
+            (update :server merge {:valid? true
+                                   :checking? false})
+            (update-in [:server] dissoc :error-message))}))
 
 (reg-event-fx
  :failure-update-server
  interceptors
  (fn [{db :db} [_ error]]
    (let [message (str/join " " (list (:status-text error) (:debug-message error)))]
-     {:db (update db :server merge {:valid? false :error-message message :checking? false})})))
+     {:db (update db :server merge {:valid? false
+                                    :error-message message
+                                    :checking? false})})))
 
 (reg-event-fx
  :save-server
@@ -249,12 +255,6 @@
        (assoc :fetching-update-time? false)
        (assoc :error-update-time error))))
 
-(reg-event-db
- :update-server-value
- interceptors
- (fn [db [_ value]]
-   (assoc db :server value)))
-
 (defn open-url-in-browser [url]
   {:open-url url})
 
@@ -304,3 +304,15 @@
  interceptors
  (fn [db [_ _]]
    (assoc-in db [:search :searching?] false)))
+
+(reg-event-fx
+ :ui/update-feedback
+ interceptors
+ (fn [{db :db} [_ message]]
+   {:db (assoc-in db [:ui :feedback :message] message)}))
+
+(reg-event-fx
+ :ui/dismiss-feedback
+ interceptors
+ (fn [{db :db} [_]]
+   {:db (assoc-in db [:ui :feedback :message] nil)}))

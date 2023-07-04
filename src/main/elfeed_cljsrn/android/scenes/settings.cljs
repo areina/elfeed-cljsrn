@@ -7,29 +7,49 @@
    [elfeed-cljsrn.events]
    [elfeed-cljsrn.subs]))
 
-;; TODO: add a snackbar to give feedback when the server is updated
+(defn ^:private feedback-message [{:keys [message on-dismiss]}]
+  [rn/view {:style {:flex 1
+                    :justify-content "space-between"}}
+   [paper/snackbar {:visible (boolean message)
+                    :on-dismiss on-dismiss} message]])
 
-(defn settings [{:keys [url _error-message _on-update]}]
+(defn settings [{:keys [url _updating? _error-message _on-update]}]
   (let [server-url (r/atom url)
+        on-change-text (fn [text]
+                         (reset! server-url text)
+                         (r/flush))
         styles {:wrapper {:flex 1
                           :padding-top 16
                           :padding-horizontal 16}}]
-    (fn [{:keys [_url error-message on-update]}]
-      [rn/view {:style (:wrapper styles)}
-       [paper/text-input {:mode "outlined"
-                          :label "Elfeed web url"
-                          :keyboard-type "url"
-                          :error (boolean (seq error-message))
-                          :on-change-text (fn [text]
-                                            (reset! server-url text)
-                                            (r/flush))
-                          :value @server-url}]
-       [paper/helper-text {:type "error" :visible (boolean (seq error-message))} error-message]
-       [paper/button {:on-press (fn [_e] (on-update @server-url) )} "UPDATE SERVER"]])))
+    (fn [{:keys [_url updating? error-message on-update]}]
+      (let [has-error? (boolean (seq error-message))]
+        [rn/view {:style (:wrapper styles)}
+         [paper/text-input {:mode "outlined"
+                            :label "Elfeed url"
+                            :keyboard-type "url"
+                            :error has-error?
+                            :on-change-text on-change-text
+                            :value @server-url}]
+         [paper/helper-text {:type "error" :visible has-error?} error-message]
+         [paper/button {:style {:align-self "flex-end"}
+                        :mode "contained-tonal"
+                        :loading updating?
+                        :disabled updating?
+                        :on-press (fn [_e] (on-update @server-url))}
+          (if updating? "UPDATING" "UPDATE SERVER")]]))))
 
 (defn settings-scene [{:keys [^js _navigation ^js _route]}]
-  (let [server-info @(subscribe [:server])]
-    (when (:url server-info)
-      [settings {:url (:url server-info)
-                 :error-message (:error-message server-info)
-                 :on-update (fn [new-url] (dispatch [:update-server new-url]))}])))
+  (let [server-info (subscribe [:server])
+        feedback (subscribe [:ui/feedback])]
+    (fn [{:keys [^js _navigation ^js _route]}]
+      (when (:url @server-info)
+        [:<>
+         [settings {:url (:url @server-info)
+                    :updated-at (:updated-at @server-info)
+                    :error-message (:error-message @server-info)
+                    :updating? (:checking? @server-info)
+                    :on-update (fn [new-url] (println "update server") (dispatch [:update-server new-url]))}]
+         [feedback-message {:message (:message @feedback)
+                            :on-dismiss (fn []
+                                          (println "dismiss ")
+                                          (dispatch [:ui/dismiss-feedback]))}]]))))

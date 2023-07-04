@@ -94,3 +94,8 @@
  :booting?
  (fn [db]
    (:booting? db)))
+
+(reg-sub
+ :ui/feedback
+ (fn [db]
+   (:feedback (:ui db))))
