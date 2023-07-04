@@ -1,0 +1,11 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches:
+      - alpha
+      - main
+
+jobs:
+  test:
+    uses: ./.github/workflows/tests.yml
