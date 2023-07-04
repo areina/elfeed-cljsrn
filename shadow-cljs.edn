@@ -23,5 +23,5 @@
    :js-options {:js-package-dirs ["react-native-app/node_modules"]}}
   :test
   {:target    :node-test
-   :output-to "out/node-tests.js"
+   :output-to "out/tests.js"
    :autorun   true}}}

@@ -5,7 +5,8 @@
   "scripts": {
     "watch": "shadow-cljs watch app",
     "start": "npm start --prefix react-native-app",
-    "release": "rm -rf react-native-app/app/ && shadow-cljs release app && npm run android --prefix react-native-app -- --mode=release"
+    "release": "rm -rf react-native-app/app/ && shadow-cljs release app && npm run android --prefix react-native-app -- --mode=release",
+    "test": "rm -rf out/ && shadow-cljs compile test && node out/tests.js"
   },
   "devDependencies": {
     "shadow-cljs": "2.24.0",
