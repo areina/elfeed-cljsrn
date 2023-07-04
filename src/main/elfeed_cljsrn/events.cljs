@@ -261,7 +261,7 @@
 (reg-event-fx
  :open-url-in-browser
  interceptors
- (fn [{db :db} [_ url]]
+ (fn [{_db :db} [_ url]]
    (open-url-in-browser url)))
 
 (reg-event-fx

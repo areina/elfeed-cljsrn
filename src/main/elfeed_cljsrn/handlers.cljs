@@ -88,12 +88,9 @@
 
 (defn success-fetch-entry-content [{db :db} [_event-id entry-id response]]
   (let [cleaned-response (str/replace response "\n" " ")]
-    {:dispatch [:mark-entries-as :read (list entry-id)]
-     :db (-> db
+    {:db (-> db
              (assoc-in [:entry/by-id entry-id :content-body] cleaned-response)
-             (assoc-in [:entry/by-id entry-id :error-fetching] nil)
-             ;; (assoc :fetching-entry? false)
-             )}))
+             (assoc-in [:entry/by-id entry-id :error-fetching] nil))}))
 
 (defn success-mark-entries-as [db [_event-id state ids _response]]
   (let [next-state-fn (if (= state :read)

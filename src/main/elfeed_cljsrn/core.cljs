@@ -65,7 +65,7 @@
        [connection-error])]))
 
 ;; With this wrapper component we can have a better transition between the
-;; splash screen and our app component after the app finishes booting
+;; splash screen and our app component once the app finishes the booting process.
 (defn booting-app []
   (let [booting? (subscribe [:booting?])]
     (r/create-class

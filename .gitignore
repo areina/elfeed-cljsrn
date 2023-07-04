@@ -73,3 +73,6 @@ fastlane/screenshots
 .shadow-cljs/
 /react-native-app/app/
 out/
+
+# clj-kondo
+.clj-kondo/.cache/

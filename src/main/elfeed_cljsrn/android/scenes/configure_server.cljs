@@ -6,7 +6,7 @@
             [elfeed-cljsrn.events]
             [elfeed-cljsrn.subs]))
 
-(defn header [^js theme]
+(defn ^:private header [^js theme]
   (let [title "Configure your Elfeed server"]
     [rn/view {:style {:flex 2.5
                       :background-color (.-primary ^js (.-colors theme))
@@ -16,15 +16,15 @@
      [paper/text {:variant "headlineSmall"
                   :style {:color "#FFF"}} title]]))
 
-(defn footer [{:keys [on-press button-disabled?]}]
+(defn ^:private footer [{:keys [on-press button-disabled?]}]
   [rn/view {:style {:flex 0.5
                     :align-items "flex-end"}}
    [paper/button {:on-press on-press
                   :mode "contained-tonal"
                   :disabled button-disabled?} "NEXT"]])
 
-(defn body [server url]
-  (let [has-error? (boolean (seq (:error-message server)))]
+(defn ^:private body [{:keys [server-info input-url on-url-change]}]
+  (let [has-error? (boolean (seq (:error-message server-info)))]
     [rn/view {:style {:flex 3.5}}
      [paper/text {:variant "bodyMedium"} "Please, check that your Elfeed server is running and accessible and enter the url."]
      [paper/text-input {:style {:margin-top 20}
@@ -32,13 +32,12 @@
                         :label "Elfeed url:"
                         :error has-error?
                         :keyboard-type "url"
-                        :on-change-text (fn [text]
-                                          (reset! url text)
-                                          (r/flush))
-                        :value @url}]
-     [paper/helper-text {:type "error" :visible has-error?} (:error-message server)]]))
+                        :on-change-text (fn [new-url]
+                                          (on-url-change new-url))
+                        :value input-url}]
+     [paper/helper-text {:type "error" :visible has-error?} (:error-message server-info)]]))
 
-(defn scene [server-info input-url]
+(defn configure-server [{:keys [server-info input-url on-url-change on-save]}]
   (let [theme ^js (paper/use-theme-hook)]
     [rn/view {:style {:background-color (.-background (.-colors theme))
                       :flex 1}}
@@ -46,12 +45,22 @@
      [rn/view {:style {:flex 4
                        :padding-horizontal 28
                        :padding-vertical 20}}
-      [body server-info input-url]
-      [footer {:on-press (fn [_e] (dispatch [:save-server @input-url]))
-               :button-disabled? (empty? @input-url)}]]]))
+      [body {:server-info server-info
+             :input-url input-url
+             :on-url-change on-url-change}]
+      [footer {:on-press (fn [_e] (on-save input-url))
+               :button-disabled? (empty? input-url)}]]]))
 
-(defn configure-server-scene [^js _props]
+(defn configure-server-scene [{:keys [^js _navigation ^js _route]}]
   (let [server-info (subscribe [:server])
-        input-url (r/atom "http://")]
-    (fn [_props]
-      [:f> scene @server-info input-url])))
+        input-url (r/atom "http://")
+        on-url-change (fn [new-url]
+                        (reset! input-url new-url)
+                        (r/flush))
+        on-save (fn [new-url]
+                  (dispatch [:save-server new-url]))]
+    (fn [{:keys [^js _navigation ^js _route]}]
+      [:f> configure-server {:server-info @server-info
+                             :input-url @input-url
+                             :on-url-change on-url-change
+                             :on-save on-save}])))

@@ -9,7 +9,7 @@
                       :icon-color (or color "#FFF")
                       :on-press on-press}])
 
-(defn remote-error-message [navigation]
+(defn remote-error-message [{:keys [navigation]}]
   [paper/banner
    {:visible true
     :actions [{:label "Go to Settings"
