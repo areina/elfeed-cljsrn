@@ -56,7 +56,7 @@ jobs:
             ${{ runner.os }}-gradle-caches-
 
       - name: Make Gradlew Executable
-        run: cd android && chmod +x ./gradlew
+        run: cd react-native-app/android && chmod +x ./gradlew
 
       - name: Build cljs code
         run: npx shadow-cljs release app
