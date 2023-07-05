@@ -103,7 +103,8 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.ANDROID_SERVICE_ACCOUNT }}
           packageName: com.elfeedcljsrn
-          releaseFile: ${{steps.sign_app.outputs.signedReleaseFile}}
+          releaseFiles: ${{steps.sign_app.outputs.signedReleaseFile}}
           track: alpha
           inAppUpdatePriority: 3
           userFraction: 0.5
+          status: inProgress
