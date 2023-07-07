@@ -105,6 +105,3 @@ jobs:
           packageName: com.elfeedcljsrn
           releaseFiles: ${{steps.sign_app.outputs.signedReleaseFile}}
           track: alpha
-          inAppUpdatePriority: 3
-          userFraction: 0.5
-          status: inProgress
