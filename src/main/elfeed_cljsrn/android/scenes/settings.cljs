@@ -4,6 +4,7 @@
    [reagent.react-native :as rn]
    [reagent.core :as r]
    [re-frame.core :refer [subscribe dispatch]]
+   [elfeed-cljsrn.components :refer [button]]
    [elfeed-cljsrn.events]
    [elfeed-cljsrn.subs]))
 
@@ -31,12 +32,12 @@
                             :on-change-text on-change-text
                             :value @server-url}]
          [paper/helper-text {:type "error" :visible has-error?} error-message]
-         [paper/button {:style {:align-self "flex-end"}
-                        :mode "contained-tonal"
-                        :loading updating?
-                        :disabled updating?
-                        :on-press (fn [_e] (on-update @server-url))}
-          (if updating? "UPDATING" "UPDATE SERVER")]]))))
+         [button {:style {:align-self "flex-end"}
+                  :mode "contained-tonal"
+                  :loading updating?
+                  :disabled updating?
+                  :on-press (fn [_e] (on-update @server-url))}
+          (if updating? "UPDATING" "UPDATE")]]))))
 
 (defn settings-scene [{:keys [^js _navigation ^js _route]}]
   (let [server-info (subscribe [:server])
@@ -48,8 +49,7 @@
                     :updated-at (:updated-at @server-info)
                     :error-message (:error-message @server-info)
                     :updating? (:checking? @server-info)
-                    :on-update (fn [new-url] (println "update server") (dispatch [:update-server new-url]))}]
+                    :on-update (fn [new-url] (dispatch [:update-server new-url]))}]
          [feedback-message {:message (:message @feedback)
                             :on-dismiss (fn []
-                                          (println "dismiss ")
                                           (dispatch [:ui/dismiss-feedback]))}]]))))

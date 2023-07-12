@@ -3,6 +3,7 @@
             [reagent.react-native :as rn]
             [reagent.react-native-paper :as paper]
             [re-frame.core :refer [subscribe dispatch]]
+            [elfeed-cljsrn.components :refer [button]]
             [elfeed-cljsrn.events]
             [elfeed-cljsrn.subs]))
 
@@ -14,14 +15,14 @@
                       :padding-left 28
                       :padding-bottom 10}}
      [paper/text {:variant "headlineSmall"
-                  :style {:color "#FFF"}} title]]))
+                  :style {:color (.-onPrimary ^js (.-colors theme))}} title]]))
 
 (defn ^:private footer [{:keys [on-press button-disabled?]}]
   [rn/view {:style {:flex 0.5
                     :align-items "flex-end"}}
-   [paper/button {:on-press on-press
-                  :mode "contained-tonal"
-                  :disabled button-disabled?} "NEXT"]])
+   [button {:on-press on-press
+            :mode "contained-tonal"
+            :disabled button-disabled?} "NEXT"]])
 
 (defn ^:private body [{:keys [server-info input-url on-url-change]}]
   (let [has-error? (boolean (seq (:error-message server-info)))]

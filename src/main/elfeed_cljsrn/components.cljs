@@ -1,6 +1,11 @@
 (ns elfeed-cljsrn.components
   (:require [reagent.react-native-paper :as paper]))
 
+(defn button [props & children]
+  (let [default-props {:content-style {:height 48}}
+        merged-props (merge default-props props)]
+    [paper/button merged-props children]))
+
 (defn connection-error []
   [paper/snackbar {:visible true} "No connection"])
 
