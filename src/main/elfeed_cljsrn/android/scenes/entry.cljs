@@ -33,17 +33,14 @@
    [rn/view {:style {:margin-top 10 :flex-direction "row"}}
     (for [tag-label tags] ^{:key tag-label} [tag tag-label])]])
 
-(defn ^:private wrap-content [{:keys [content dark?]}]
+(defn ^:private wrap-content [{:keys [content ^js theme]}]
   (str "<!DOCTYPE html><html>"
        "<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>"
-       "<style>body { line-height: 1.4rem }</style>"
+       "<style>body { line-height: 1.4rem; color: "(.-onBackground (.-colors theme))"; }</style>"
        "<style>img { display: block; margin-bottom: 5px; max-width: 100%; height: auto; }</style>"
        "<style>blockquote { margin: 1em 1em; color: #999; border-left: 2px solid #999; padding-left: 1em; }</style>"
-       (if dark?
-         "<body style=\"filter: invert(1)\" >"
-         "<body>")
-       content
-       "</body>"
+       "<style>a { text-decoration: none; font-weight: bold; color: " (.-primary (.-colors theme)) "; }</style>"
+       "<body>" content "</body>"
        "</html>"))
 
 (defn ^:private loading []
@@ -55,7 +52,7 @@
 (defn ^:private body [{:keys [entry on-load-end on-scroll]}]
   (let [theme ^js (paper/use-theme-hook)
         html-content (wrap-content {:content (:content-body entry)
-                                    :dark? (.-dark theme)})]
+                                    :theme theme})]
     [web-view {:container-style {:padding-horizontal 10
                                  :padding-vertical 10}
                :style {:background-color (.-background (.-colors theme))}
