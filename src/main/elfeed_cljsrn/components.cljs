@@ -11,7 +11,7 @@
 
 (defn header-icon-button [{:keys [icon color on-press]}]
   [paper/icon-button {:icon icon
-                      :icon-color (or color "#FFF")
+                      :icon-color color
                       :on-press on-press}])
 
 (defn remote-error-message [{:keys [navigation]}]

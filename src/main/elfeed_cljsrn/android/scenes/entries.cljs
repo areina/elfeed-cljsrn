@@ -29,8 +29,9 @@
    [paper/icon-button {:color "black" :icon "rss" :size 84}]
    [paper/text {:variant "bodyMedium"} "There are no entries"]])
 
-(defn ^:private cancel-search-button []
+(defn ^:private cancel-search-button [{:keys [color]}]
   [header-icon-button {:icon "arrow-left"
+                       :color color
                        :on-press (fn [_]
                                    (dispatch [:search/abort]))}])
 
@@ -82,9 +83,10 @@
                                                (dispatch [:search/execute {:term text}])
                                                (dispatch [:search/abort]))))}]]))))
 
-(defn ^:private mark-entries-as-button [entry-ids next-state]
+(defn ^:private mark-entries-as-button [{:keys [entry-ids next-state color]}]
   (let [icon (if (= :read next-state) "email-open" "email-mark-as-unread")]
     [header-icon-button  {:icon icon
+                          :color color
                           :on-press (fn [_]
                                       (dispatch [:mark-entries-as next-state entry-ids])
                                       (dispatch [:clear-selected-entries]))}]))
@@ -93,22 +95,27 @@
   (let [ids (map :webid selected-entries)
         next-state (if (:unread? (last selected-entries)) :read :unread)]
     {:title (str (count selected-entries))
-     :headerLeft (fn [] (r/as-element [header-icon-button {:icon "arrow-left"
-                                                           :on-press (fn [_]
-                                                                       (dispatch [:clear-selected-entries]))}]))
-     :headerRight (fn [] (r/as-element [mark-entries-as-button ids next-state]))}))
+     :headerLeft (fn [^js props]
+                   (r/as-element [header-icon-button {:icon "arrow-left"
+                                                      :color (.-tintColor props)
+                                                      :on-press (fn [_]
+                                                                  (dispatch [:clear-selected-entries]))}]))
+     :headerRight (fn [^js props ]
+                    (r/as-element [mark-entries-as-button {:entry-ids ids
+                                                           :next-state next-state
+                                                           :color (.-tintColor props)}]))}))
 
 (defn ^:private entries-screen-options-on-searching [search-state]
   {:headerTitle (fn []
                   (r/as-element [:f> entries-search-input (:current-term search-state)]))
    :headerTitleContainerStyle {:flexGrow 1}
-   :headerLeft (fn []
-                 (r/as-element [cancel-search-button]))})
+   :headerLeft (fn [^js props]
+                 (r/as-element [cancel-search-button {:color (.-tintColor props)}]))})
 
 (defn entries-scene-options [search-state selected-entries]
   (let [default-options {:title "All entries"
                          :headerRight (fn [^js props]
-                                        (r/as-element [search-button (.-tintColor props)]))}]
+                                        (r/as-element [search-button {:color (.-tintColor props)}]))}]
 
     (if (:searching? search-state)
       (entries-screen-options-on-searching search-state)
