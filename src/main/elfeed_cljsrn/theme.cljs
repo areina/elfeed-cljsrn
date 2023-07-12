@@ -117,6 +117,5 @@
 (def modes {"dark" combined-dark-theme
             "light" combined-default-theme})
 
-(defn get-app-theme []
-  (let [color-scheme (.getColorScheme rn/Appearance)]
-    (get modes color-scheme combined-default-theme)))
+(defn get-app-theme [color-scheme]
+  (get modes color-scheme combined-default-theme))

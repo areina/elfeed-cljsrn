@@ -55,7 +55,8 @@
 (defn app []
   (let [server-configured? (subscribe [:server-configured?])
         connected? (subscribe [:connected?])
-        theme ^js (get-app-theme)]
+        color-scheme (rn/use-color-scheme)
+        theme ^js (get-app-theme color-scheme)]
     [paper/provider {:theme theme}
      [rn/status-bar {:background-color (.-primary (.-colors theme))}]
      (if @server-configured?
@@ -76,7 +77,7 @@
       :reagent-render
       (fn []
         (when (not @booting?)
-          [app]))})))
+          [:f> app]))})))
 
 (defn start
   {:dev/after-load true}

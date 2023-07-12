@@ -7,3 +7,4 @@
 (def status-bar (r/adapt-react-class rn/StatusBar))
 (def text-input (r/adapt-react-class rn/TextInput))
 (def view (r/adapt-react-class rn/View))
+(def use-color-scheme rn/useColorScheme)
