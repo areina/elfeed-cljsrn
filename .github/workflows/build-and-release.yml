@@ -1,0 +1,150 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  test:
+    uses: ./.github/workflows/tests.yml
+
+  build:
+    name: Build app
+    runs-on: ubuntu-latest
+    needs: [test]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Prepare Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: 'react-native-app/package-lock.json'
+
+      - run: npm ci
+      - run: npm ci --prefix=react-native-app
+
+      - name: Prepare java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+
+      - name: Install clojure tools
+        uses: DeLaGuardo/setup-clojure@11.0
+        with:
+          cli: 'latest'
+
+      - name: Cache clojure dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.deps.clj
+          # List all files containing dependencies:
+          key: cljdeps-${{ hashFiles('shadow-cljs.edn') }}
+          restore-keys: cljdeps-
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-${{hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Cache Gradle Dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-caches-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-caches-
+
+      - name: Make Gradlew Executable
+        run: cd react-native-app/android && chmod +x ./gradlew
+
+      - name: Build cljs code
+        run: npx shadow-cljs release app
+
+      - name: Build Android App Bundle
+        run: cd react-native-app/android && ./gradlew bundleRelease --no-daemon
+
+      - name: Upload unsigned bundle
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-unsigned
+          path: react-native-app/android/app/build/outputs/bundle/release/
+          retention-days: 1
+
+  alpha-distribution:
+    name: Distribution to Alpha channel
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
+
+      - name: Download unsigned bundle
+        uses: actions/download-artifact@v3
+        with:
+          name: app-unsigned
+          path: react-native-app/android/app/build/outputs/bundle/release
+
+      - name: Sign App Bundle
+        id: sign_app_bundle
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: react-native-app/android/app/build/outputs/bundle/release
+          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+          alias: ${{ secrets.ANDROID_SIGNING_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Signed App Bundle
+          path: ${{steps.sign_app_bundle.outputs.signedReleaseFile}}
+
+      - name: Sign App APK
+        uses: r0adkll/sign-android-release@v1
+        id: sign_app_apk
+        with:
+          releaseDirectory: react-native-app/android/app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+          alias: ${{ secrets.ANDROID_SIGNING_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Signed App APK
+          path: ${{steps.sign_app_apk.outputs.signedReleaseFile}}
+          retention-days: 1
+
+      - name: Rename files
+        run: |
+          cp ${{steps.sign_app_bundle.outputs.signedReleaseFile}} app-release-${{ steps.get_version.outputs.VERSION }}.aab
+          cp ${{steps.sign_app_apk.outputs.signedReleaseFile}} app-release-${{ steps.get_version.outputs.VERSION }}.apk
+
+      # Comment it temporarily, until we validate the rest of the flow works correctly.
+      # - name: Deploy to Play Store (ALPHA)
+      #   uses: r0adkll/upload-google-play@v1
+      #   with:
+      #     serviceAccountJsonPlainText: ${{ secrets.ANDROID_SERVICE_ACCOUNT }}
+      #     packageName: com.elfeedcljsrn
+      #     releaseFiles: ${{steps.sign_app_bundle.outputs.signedReleaseFile}}
+      #     track: alpha
+
+      - name: Create Github Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          prerelease: true
+          files: |
+            app-release-${{ steps.get_version.outputs.VERSION }}.aab
+            app-release-${{ steps.get_version.outputs.VERSION }}.apk
