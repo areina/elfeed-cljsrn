@@ -28,7 +28,8 @@
   (let [has-error? (boolean (seq (:error-message server-info)))]
     [rn/view {:style {:flex 3.5}}
      [paper/text {:variant "bodyMedium"} "Please, check that your Elfeed server is running and accessible and enter the url."]
-     [paper/text-input {:style {:margin-top 20}
+     [paper/text-input {:testID "server_url"
+                        :style {:margin-top 20}
                         :placeholder "http://"
                         :label "Elfeed url:"
                         :error has-error?
