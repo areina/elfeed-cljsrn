@@ -51,13 +51,13 @@ jobs:
           restore-keys: cljdeps-
 
       - name: Cache Gradle Wrapper
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-wrapper-${{hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       - name: Cache Gradle Dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-caches-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
@@ -110,26 +110,27 @@ jobs:
           name: Signed App Bundle
           path: ${{steps.sign_app_bundle.outputs.signedReleaseFile}}
 
-      - name: Sign App APK
-        uses: r0adkll/sign-android-release@v1
-        id: sign_app_apk
+      - name: Convert aab to apk
+        id: convert_aab
+        uses: mukeshsolanki/bundletool-action@v1.0.0
         with:
-          releaseDirectory: react-native-app/android/app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
-          alias: ${{ secrets.ANDROID_SIGNING_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          aabFile: ${{steps.sign_app_bundle.outputs.signedReleaseFile}}
+          base64Keystore: ${{ secrets.ANDROID_SIGNING_KEY }}
+          keystoreAlias: ${{ secrets.ANDROID_SIGNING_ALIAS }}
+          keystorePassword: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
           name: Signed App APK
-          path: ${{steps.sign_app_apk.outputs.signedReleaseFile}}
+          path: ${{ steps.convert_aab.outputs.apkPath }}
           retention-days: 1
 
       - name: Rename files
         run: |
           cp ${{steps.sign_app_bundle.outputs.signedReleaseFile}} app-release-${{ steps.get_version.outputs.VERSION }}.aab
-          cp ${{steps.sign_app_apk.outputs.signedReleaseFile}} app-release-${{ steps.get_version.outputs.VERSION }}.apk
+          cp ${{steps.convert_aab.outputs.apkPath}} app-release-${{ steps.get_version.outputs.VERSION }}.apk
 
       # Comment it temporarily, until we validate the rest of the flow works correctly.
       # - name: Deploy to Play Store (ALPHA)
