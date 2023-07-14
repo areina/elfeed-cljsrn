@@ -1,6 +1,0 @@
-#!/bin/bash
-echo "Shaking phone";
-adb shell input keyevent 82
-echo "Pressing 'Reload JS'"
-adb shell input keyevent 19 # UP key to select the reload option
-adb shell input keyevent 66 # Enter key

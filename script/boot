@@ -1,7 +1,0 @@
-#!/bin/bash
-echo "Reversing ports (8081, 3449, 8080)"
-adb reverse tcp:8081 tcp:8081
-adb reverse tcp:3449 tcp:3449
-adb reverse tcp:8080 tcp:8080
-echo "Starting docker-compose"
-docker-compose up
