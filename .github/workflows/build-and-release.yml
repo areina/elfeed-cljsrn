@@ -132,14 +132,13 @@ jobs:
           cp ${{steps.sign_app_bundle.outputs.signedReleaseFile}} app-release-${{ steps.get_version.outputs.VERSION }}.aab
           cp ${{steps.convert_aab.outputs.apkPath}} app-release-${{ steps.get_version.outputs.VERSION }}.apk
 
-      # Comment it temporarily, until we validate the rest of the flow works correctly.
-      # - name: Deploy to Play Store (ALPHA)
-      #   uses: r0adkll/upload-google-play@v1
-      #   with:
-      #     serviceAccountJsonPlainText: ${{ secrets.ANDROID_SERVICE_ACCOUNT }}
-      #     packageName: com.elfeedcljsrn
-      #     releaseFiles: ${{steps.sign_app_bundle.outputs.signedReleaseFile}}
-      #     track: alpha
+      - name: Deploy to Play Store (ALPHA)
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.ANDROID_SERVICE_ACCOUNT }}
+          packageName: com.elfeedcljsrn
+          releaseFiles: ${{steps.sign_app_bundle.outputs.signedReleaseFile}}
+          track: alpha
 
       - name: Create Github Release
         uses: softprops/action-gh-release@v1
