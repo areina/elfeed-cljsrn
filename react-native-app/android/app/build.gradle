@@ -104,8 +104,8 @@ android {
         applicationId "com.elfeedcljsrn"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 8
-        versionName "2.2.0"
+        versionCode 9
+        versionName "2.3.0"
     }
 
     splits {

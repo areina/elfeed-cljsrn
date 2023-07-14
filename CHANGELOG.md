@@ -1,7 +1,18 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
-## [Unreleased]
+## [2.3.0]
+### Changed
+- Update ReactNative version to v0.71.11
+- Update project dependencies
+- Change to shadow-cljs as the cljs build tool
+- Update look&feel
+
+### Added
+- Dark mode support
+- New way to navigate between feed entries
+
+## [1.3.0]
 ### Changed
 - Update ReactNative version to v0.41.2
 
