@@ -1,7 +1,5 @@
 # elfeed-cljsrn
 
-[![CircleCI](https://circleci.com/gh/areina/elfeed-cljsrn.svg?style=svg)](https://circleci.com/gh/areina/elfeed-cljsrn)
-
 A mobile client for [Elfeed](https://github.com/skeeto/elfeed/) built with React
 Native and written in ClojureScript.
 
@@ -64,17 +62,3 @@ npm outdated
 ## Local release/installation
 
 - `npm run release`
-
-## Todo
-
-- ~~Publish on Google Play~~
-- Elfeed: Authentication (auth basic or something more complex)
-- ~~Elfeed: Mark entry as read~~
-- ~~App: Update code to new re-frame v0.8~~
-- ~~App: Split code in scenes and components~~
-- App: Testing
-- ~~RN: Change navigation to new navigation experimental~~
-- ~~RN: Use SwipeableListView to mark an entry as read from the list~~
-- iOS version (I won't work on this because I don't use iOS, but I'm happy
-  to help you if you are interested)
-- Version for tablets
