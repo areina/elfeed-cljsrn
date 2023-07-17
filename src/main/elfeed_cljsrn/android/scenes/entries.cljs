@@ -100,7 +100,7 @@
                                                       :color (.-tintColor props)
                                                       :on-press (fn [_]
                                                                   (dispatch [:clear-selected-entries]))}]))
-     :headerRight (fn [^js props ]
+     :headerRight (fn [^js props]
                     (r/as-element [mark-entries-as-button {:entry-ids ids
                                                            :next-state next-state
                                                            :color (.-tintColor props)}]))}))
@@ -113,7 +113,7 @@
                  (r/as-element [cancel-search-button {:color (.-tintColor props)}]))})
 
 (defn entries-scene-options [search-state selected-entries]
-  (let [default-options {:title "All entries"
+  (let [default-options {:title (or (:feed-title search-state) "All entries")
                          :headerRight (fn [^js props]
                                         (r/as-element [search-button {:color (.-tintColor props)}]))}]
 
