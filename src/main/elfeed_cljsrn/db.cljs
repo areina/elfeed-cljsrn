@@ -16,15 +16,13 @@
                [:searching? :boolean]
                [:term {:optional true} string?]
                [:default-term :string]
-               ;; TODO
-               ;; [:feed-title {:optional true} string?]
-               ;; [:feed-url {:optional true} string?]
-               ])
+               [:feed-title {:optional true} [:maybe string?]]
+               [:feed-url {:optional true} [:maybe string?]]])
 
 (def db-schema [:map
                 [:current-entry {:optional true} string?]
                 [:update-time :int]
                 [:connected? :boolean]
                 [:search s-search]
-                [:entries {:optional true} [:sequential :string]]
+                [:entries {:optional true} [:sequential string?]]
                 [:server {:optional true} s-server]])
