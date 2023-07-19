@@ -1,5 +1,6 @@
 (ns elfeed-cljsrn.subs
-  (:require [re-frame.core :refer [reg-sub]]))
+  (:require [re-frame.core :refer [reg-sub]]
+            [clojure.string :as str]))
 
 (defn get-entry [db entry-id]
   (let [entry (get (:entry/by-id db) entry-id)
@@ -24,9 +25,9 @@
  :<- [:search/state]
  :<- [:feed/by-id]
  (fn [[search feeds]]
-   (map (fn [[_id feed]]
-          (let [selected? (= (:title feed) (:feed-title search))]
-            (merge {:selected? selected?} feed))) feeds)))
+   (sort-by (comp str/lower-case :title)
+            (map (fn [[_id feed]]
+                   (assoc feed :selected? (= (:title feed) (:feed-title search)))) feeds))))
 
 (reg-sub
  :total-entries
