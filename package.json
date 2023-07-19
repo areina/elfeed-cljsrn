@@ -9,7 +9,7 @@
     "test": "rm -rf out/ && shadow-cljs compile test && node out/tests.js"
   },
   "devDependencies": {
-    "shadow-cljs": "2.24.0",
+    "shadow-cljs": "2.24.1",
     "xmlhttprequest": "^1.8.0"
   }
 }

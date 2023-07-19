@@ -105,14 +105,14 @@ jobs:
           keyStorePassword: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Signed App Bundle
           path: ${{steps.sign_app_bundle.outputs.signedReleaseFile}}
 
       - name: Convert aab to apk
         id: convert_aab
-        uses: mukeshsolanki/bundletool-action@v1.0.0
+        uses: mukeshsolanki/bundletool-action@v1.0.2
         with:
           aabFile: ${{steps.sign_app_bundle.outputs.signedReleaseFile}}
           base64Keystore: ${{ secrets.ANDROID_SIGNING_KEY }}
