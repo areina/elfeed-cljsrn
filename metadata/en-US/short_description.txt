@@ -1,0 +1,1 @@
+Mobile client for Elfeed, an extensible web feed reader for Emacs

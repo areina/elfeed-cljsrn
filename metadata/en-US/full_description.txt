@@ -1,0 +1,9 @@
+Read your feed entries from the device and have them synchronized with your
+Emacs. The app connects remotely to Elfeed web API and it gets the feeds content
+through it.
+
+This app requires that you have elfeed running in your computer and elfeed api
+accessible remotely. Check the project page for more info: http://github.com/areina/elfeed-cljsrn
+
+
+The app is open source and the source code is available in the project page.

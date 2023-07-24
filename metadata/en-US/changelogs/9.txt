@@ -1,0 +1,4 @@
+Big update. 5 years later, the app has been updated. It includes:
+- Dark mode
+- Updated look&feel
+- When reading a feed entry, you can swipe left/right to go to the prev/next entry
