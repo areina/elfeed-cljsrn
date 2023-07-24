@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [2.4.0]
+### Changed
+- Update project dependencies
+- The title of the app header is updated when you are filtering by a feed
+- The list of feed subscriptions is now sorted alphabetically
+
 ## [2.3.0]
 ### Changed
 - Update ReactNative version to v0.71.11
