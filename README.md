@@ -5,10 +5,11 @@ Native and written in ClojureScript.
 
 ## Download
 
-Elfeed for Android is available
-in [Google Play](https://play.google.com/store/apps/details?id=com.elfeedcljsrn)
+Elfeed for Android is available on
+[Google Play](https://play.google.com/store/apps/details?id=com.elfeedcljsrn),
+[F-Droid](https://f-droid.org/packages/com.elfeedcljsrn/)
 or you can download the APKs directly
-from [Github releases](https://github.com/areina/elfeed-cljsrn/releases)
+from [Github releases](https://github.com/areina/elfeed-cljsrn/releases/latest)
 
 ## Motivation
 
